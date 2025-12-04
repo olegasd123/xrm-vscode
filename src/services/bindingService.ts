@@ -1,0 +1,53 @@
+import * as vscode from "vscode";
+import * as path from "path";
+import { BindingEntry, BindingSnapshot } from "../types";
+import { ConfigurationService } from "./configurationService";
+
+export class BindingService {
+  constructor(private readonly config: ConfigurationService) {}
+
+  async getBinding(uri: vscode.Uri): Promise<BindingEntry | undefined> {
+    const snapshot = await this.config.loadBindings();
+    const targetPath = path.normalize(uri.fsPath);
+    const matches = snapshot.bindings.filter((binding) =>
+      this.pathMatches(binding, targetPath),
+    );
+
+    // Prefer the most specific path (longest localPath)
+    return matches.sort(
+      (a, b) => b.localPath.length - a.localPath.length,
+    )[0];
+  }
+
+  async addOrUpdateBinding(entry: BindingEntry): Promise<void> {
+    const snapshot = await this.config.loadBindings();
+    const normalized = this.config.createBinding(entry);
+    const existingIndex = snapshot.bindings.findIndex(
+      (binding) => path.normalize(binding.localPath) === normalized.localPath,
+    );
+
+    if (existingIndex >= 0) {
+      snapshot.bindings[existingIndex] = normalized;
+    } else {
+      snapshot.bindings.push(normalized);
+    }
+
+    await this.config.saveBindings(snapshot);
+  }
+
+  async listBindings(): Promise<BindingSnapshot> {
+    return this.config.loadBindings();
+  }
+
+  private pathMatches(binding: BindingEntry, targetPath: string): boolean {
+    if (binding.kind === "file") {
+      return path.normalize(binding.localPath) === targetPath;
+    }
+
+    const normalizedBinding = path.normalize(binding.localPath);
+    return (
+      targetPath === normalizedBinding ||
+      targetPath.startsWith(normalizedBinding + path.sep)
+    );
+  }
+}

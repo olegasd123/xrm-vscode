@@ -1,0 +1,31 @@
+{
+  "environments": [
+    {
+      "name": "dev",
+      "url": "https://your-dev.crm.dynamics.com",
+      "tenantId": "",
+      "clientId": "",
+      "clientSecret": ""
+    },
+    {
+      "name": "test",
+      "url": "https://your-test.crm.dynamics.com"
+    },
+    {
+      "name": "prod",
+      "url": "https://your-prod.crm.dynamics.com"
+    }
+  ],
+  "solutions": [
+    {
+      "name": "new_",
+      "displayName": "Default Solution",
+      "default": true
+    },
+    {
+      "name": "cmp_",
+      "displayName": "Component Solution"
+    }
+  ],
+  "defaultSolution": "new_"
+}

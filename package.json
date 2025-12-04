@@ -1,0 +1,97 @@
+{
+  "name": "xrm-vscode",
+  "displayName": "XRM Web Resource Publisher",
+  "description": "Publish Dynamics 365 (XRM) web resources directly from VS Code with environment-aware bindings.",
+  "version": "0.0.1",
+  "publisher": "your-name",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:xrm.openResourceMenu",
+    "onCommand:xrm.configureEnvironments",
+    "onCommand:xrm.setDefaultSolution",
+    "onCommand:xrm.bindResource",
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "xrm.openResourceMenu",
+        "title": "XRM: Resource Actions",
+        "category": "XRM"
+      },
+      {
+        "command": "xrm.configureEnvironments",
+        "title": "XRM: Edit Environments & Solutions",
+        "category": "XRM"
+      },
+      {
+        "command": "xrm.setDefaultSolution",
+        "title": "XRM: Set Default Solution",
+        "category": "XRM"
+      },
+      {
+        "command": "xrm.bindResource",
+        "title": "XRM: Bind Resource",
+        "category": "XRM"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "xrm.resourceMenu",
+        "label": "XRM"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "submenu": "xrm.resourceMenu",
+          "group": "navigation@xrm",
+          "when": "resourceScheme == 'file'"
+        }
+      ],
+      "xrm.resourceMenu": [
+        {
+          "command": "xrm.openResourceMenu",
+          "group": "inline@1",
+          "when": "true"
+        },
+        {
+          "command": "xrm.configureEnvironments",
+          "group": "inline@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "xrm.openResourceMenu"
+        },
+        {
+          "command": "xrm.configureEnvironments"
+        },
+        {
+          "command": "xrm.setDefaultSolution"
+        },
+        {
+          "command": "xrm.bindResource"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.2",
+    "@types/vscode": "^1.84.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}

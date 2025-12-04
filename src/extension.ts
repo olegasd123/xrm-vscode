@@ -1,0 +1,186 @@
+import * as vscode from "vscode";
+import { ConfigurationService } from "./services/configurationService";
+import { BindingService } from "./services/bindingService";
+import { UiService } from "./services/uiService";
+import { PublisherService } from "./services/publisherService";
+import { BindingEntry } from "./types";
+
+export async function activate(context: vscode.ExtensionContext) {
+  const configuration = new ConfigurationService();
+  const bindings = new BindingService(configuration);
+  const ui = new UiService();
+  const publisher = new PublisherService();
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "xrm.openResourceMenu",
+      async (uri?: vscode.Uri) => openResourceMenu(uri, configuration, bindings, ui, publisher),
+    ),
+    vscode.commands.registerCommand(
+      "xrm.configureEnvironments",
+      async () => editConfiguration(configuration),
+    ),
+    vscode.commands.registerCommand(
+      "xrm.setDefaultSolution",
+      async () => setDefaultSolution(configuration),
+    ),
+    vscode.commands.registerCommand(
+      "xrm.bindResource",
+      async (uri?: vscode.Uri) => addBinding(uri, configuration, bindings, ui),
+    ),
+  );
+}
+
+async function openResourceMenu(
+  uri: vscode.Uri | undefined,
+  configuration: ConfigurationService,
+  bindings: BindingService,
+  ui: UiService,
+  publisher: PublisherService,
+) {
+  const targetUri = await resolveTargetUri(uri);
+  if (!targetUri) {
+    return;
+  }
+
+  const binding = await bindings.getBinding(targetUri);
+  if (!binding) {
+    await addBinding(targetUri, configuration, bindings, ui);
+    return;
+  }
+
+  await publishFlow(binding, configuration, ui, publisher);
+}
+
+async function addBinding(
+  uri: vscode.Uri | undefined,
+  configuration: ConfigurationService,
+  bindings: BindingService,
+  ui: UiService,
+): Promise<void> {
+  const targetUri = await resolveTargetUri(uri);
+  if (!targetUri) {
+    return;
+  }
+
+  const config = await configuration.loadConfiguration();
+  const stat = await vscode.workspace.fs.stat(targetUri);
+  const kind = stat.type === vscode.FileType.Directory ? "folder" : "file";
+  const relative = configuration.getRelativeToWorkspace(targetUri.fsPath);
+  const defaultSolution =
+    config.defaultSolution ||
+    config.solutions.find((s) => s.default)?.name ||
+    config.solutions[0]?.name;
+  const defaultRemote =
+    defaultSolution && relative
+      ? `${defaultSolution}/${relative.replace(/\\/g, "/")}`
+      : relative.replace(/\\/g, "/");
+
+  const remotePath = await ui.promptRemotePath(defaultRemote);
+  if (!remotePath) {
+    return;
+  }
+
+  const solution =
+    (await ui.promptSolution(
+      config.solutions.map((s) => s.name),
+      defaultSolution,
+    )) || defaultSolution;
+
+  if (!solution) {
+    vscode.window.showWarningMessage(
+      "No solution selected. Binding was not created.",
+    );
+    return;
+  }
+
+  const binding: BindingEntry = {
+    localPath: targetUri.fsPath,
+    remotePath,
+    solution,
+    kind,
+  };
+
+  await bindings.addOrUpdateBinding(binding);
+  vscode.window.showInformationMessage(
+    `Bound ${relative || targetUri.fsPath} to ${remotePath} (${solution}).`,
+  );
+}
+
+async function publishFlow(
+  binding: BindingEntry,
+  configuration: ConfigurationService,
+  ui: UiService,
+  publisher: PublisherService,
+) {
+  const config = await configuration.loadConfiguration();
+  const env = await ui.pickEnvironment(config.environments);
+  if (!env) {
+    return;
+  }
+
+  await publisher.publish(binding, env);
+}
+
+async function editConfiguration(
+  configuration: ConfigurationService,
+): Promise<void> {
+  const config = await configuration.loadConfiguration();
+  await configuration.saveConfiguration(config);
+  const uri = vscode.Uri.joinPath(
+    vscode.Uri.file(configuration.workspaceRoot || "."),
+    ".vscode",
+    "xrm.config.json",
+  );
+  await vscode.window.showTextDocument(uri);
+}
+
+async function setDefaultSolution(
+  configuration: ConfigurationService,
+): Promise<void> {
+  const config = await configuration.loadConfiguration();
+  const candidate =
+    (await vscode.window.showInputBox({
+      prompt:
+        "Enter default solution prefix or pick an existing one to set it globally",
+      value: config.defaultSolution,
+      placeHolder: config.solutions.map((s) => s.name).join(", "),
+    })) ?? config.defaultSolution;
+
+  if (!candidate) {
+    return;
+  }
+
+  config.defaultSolution = candidate;
+  config.solutions = markDefault(config.solutions, candidate);
+  await configuration.saveConfiguration(config);
+  vscode.window.showInformationMessage(`Default solution set to ${candidate}.`);
+}
+
+function markDefault(
+  solutions: { name: string; displayName?: string; default?: boolean }[],
+  defaultName: string,
+) {
+  return solutions.map((solution) => ({
+    ...solution,
+    default: solution.name === defaultName,
+  }));
+}
+
+async function resolveTargetUri(
+  uri?: vscode.Uri,
+): Promise<vscode.Uri | undefined> {
+  if (uri) {
+    return uri;
+  }
+
+  const editorUri = vscode.window.activeTextEditor?.document.uri;
+  if (editorUri) {
+    return editorUri;
+  }
+
+  vscode.window.showInformationMessage("Select a file or folder to proceed.");
+  return undefined;
+}
+
+export function deactivate() {}
