@@ -15,6 +15,7 @@
     "onCommand:xrm.configureEnvironments",
     "onCommand:xrm.setDefaultSolution",
     "onCommand:xrm.bindResource",
+    "onCommand:xrm.setEnvironmentCredentials",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
@@ -38,6 +39,11 @@
       {
         "command": "xrm.bindResource",
         "title": "XRM: Bind Resource",
+        "category": "XRM"
+      },
+      {
+        "command": "xrm.setEnvironmentCredentials",
+        "title": "XRM: Set Environment Credentials",
         "category": "XRM"
       }
     ],
@@ -78,6 +84,9 @@
         },
         {
           "command": "xrm.bindResource"
+        },
+        {
+          "command": "xrm.setEnvironmentCredentials"
         }
       ]
     }
@@ -85,13 +94,11 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
     "@types/node": "^20.10.2",
     "@types/vscode": "^1.84.0",
-    "eslint": "^8.56.0",
     "typescript": "^5.3.3"
   }
 }

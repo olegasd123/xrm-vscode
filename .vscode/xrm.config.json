@@ -2,10 +2,7 @@
   "environments": [
     {
       "name": "dev",
-      "url": "https://your-dev.crm.dynamics.com",
-      "tenantId": "",
-      "clientId": "",
-      "clientSecret": ""
+      "url": "https://your-dev.crm.dynamics.com"
     },
     {
       "name": "test",

@@ -4,17 +4,20 @@ import { BindingService } from "./services/bindingService";
 import { UiService } from "./services/uiService";
 import { PublisherService } from "./services/publisherService";
 import { BindingEntry } from "./types";
+import { SecretService } from "./services/secretService";
 
 export async function activate(context: vscode.ExtensionContext) {
   const configuration = new ConfigurationService();
   const bindings = new BindingService(configuration);
   const ui = new UiService();
   const publisher = new PublisherService();
+  const secrets = new SecretService(context.secrets);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "xrm.openResourceMenu",
-      async (uri?: vscode.Uri) => openResourceMenu(uri, configuration, bindings, ui, publisher),
+      async (uri?: vscode.Uri) =>
+        openResourceMenu(uri, configuration, bindings, ui, publisher, secrets),
     ),
     vscode.commands.registerCommand(
       "xrm.configureEnvironments",
@@ -28,6 +31,10 @@ export async function activate(context: vscode.ExtensionContext) {
       "xrm.bindResource",
       async (uri?: vscode.Uri) => addBinding(uri, configuration, bindings, ui),
     ),
+    vscode.commands.registerCommand(
+      "xrm.setEnvironmentCredentials",
+      async () => setEnvironmentCredentials(configuration, ui, secrets),
+    ),
   );
 }
 
@@ -37,6 +44,7 @@ async function openResourceMenu(
   bindings: BindingService,
   ui: UiService,
   publisher: PublisherService,
+  secrets: SecretService,
 ) {
   const targetUri = await resolveTargetUri(uri);
   if (!targetUri) {
@@ -49,7 +57,7 @@ async function openResourceMenu(
     return;
   }
 
-  await publishFlow(binding, configuration, ui, publisher);
+  await publishFlow(binding, configuration, ui, publisher, secrets);
 }
 
 async function addBinding(
@@ -112,6 +120,7 @@ async function publishFlow(
   configuration: ConfigurationService,
   ui: UiService,
   publisher: PublisherService,
+  secrets: SecretService,
 ) {
   const config = await configuration.loadConfiguration();
   const env = await ui.pickEnvironment(config.environments);
@@ -119,7 +128,8 @@ async function publishFlow(
     return;
   }
 
-  await publisher.publish(binding, env);
+  const creds = await secrets.getCredentials(env.name);
+  await publisher.publish(binding, env, creds);
 }
 
 async function editConfiguration(
@@ -165,6 +175,50 @@ function markDefault(
     ...solution,
     default: solution.name === defaultName,
   }));
+}
+
+async function setEnvironmentCredentials(
+  configuration: ConfigurationService,
+  ui: UiService,
+  secrets: SecretService,
+): Promise<void> {
+  const config = await configuration.loadConfiguration();
+  const env = await ui.pickEnvironment(config.environments);
+  if (!env) {
+    return;
+  }
+
+  const clientId = await vscode.window.showInputBox({
+    prompt: `Client ID for ${env.name}`,
+    ignoreFocusOut: true,
+    value: "",
+  });
+  if (!clientId) {
+    return;
+  }
+
+  const tenantId = await vscode.window.showInputBox({
+    prompt: `Tenant ID for ${env.name} (optional)`,
+    ignoreFocusOut: true,
+  });
+
+  const clientSecret = await vscode.window.showInputBox({
+    prompt: `Client Secret for ${env.name}`,
+    password: true,
+    ignoreFocusOut: true,
+  });
+  if (!clientSecret) {
+    return;
+  }
+
+  await secrets.setCredentials(env.name, {
+    clientId,
+    clientSecret,
+    tenantId,
+  });
+  vscode.window.showInformationMessage(
+    `Credentials saved securely for environment ${env.name}.`,
+  );
 }
 
 async function resolveTargetUri(

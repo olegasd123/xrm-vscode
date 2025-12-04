@@ -1,11 +1,6 @@
 export interface EnvironmentConfig {
   name: string;
   url: string;
-  tenantId?: string;
-  clientId?: string;
-  clientSecret?: string;
-  username?: string;
-  password?: string;
 }
 
 export interface SolutionConfig {
@@ -33,4 +28,8 @@ export interface BindingEntry {
 
 export interface BindingSnapshot {
   bindings: BindingEntry[];
+}
+
+export interface PublishContext {
+  credentialsMissing: boolean;
 }

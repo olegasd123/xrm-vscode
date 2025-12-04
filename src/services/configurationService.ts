@@ -25,8 +25,14 @@ export class ConfigurationService {
     const exists = await this.exists(uri);
     if (!exists) {
       const defaults: XrmConfiguration = {
-        environments: [],
-        solutions: [],
+        environments: [
+          { name: "dev", url: "https://your-dev.crm.dynamics.com" },
+          { name: "prod", url: "https://your-prod.crm.dynamics.com" }
+        ],
+        solutions: [
+          { name: "new_", displayName: "Default Solution", default: true },
+          { name: "cmp_", displayName: "Component Solution" }
+        ],
         defaultSolution: undefined,
       };
       await this.saveConfiguration(defaults);

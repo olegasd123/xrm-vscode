@@ -19,7 +19,7 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`) and
 ```jsonc
 {
   "environments": [
-    { "name": "dev", "url": "https://your-dev.crm.dynamics.com", "clientId": "", "clientSecret": "" },
+    { "name": "dev", "url": "https://your-dev.crm.dynamics.com" },
     { "name": "prod", "url": "https://your-prod.crm.dynamics.com" }
   ],
   "solutions": [
@@ -30,6 +30,11 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`) and
 }
 ```
 Solution names are treated as prefixes when generating remote paths.
+
+### Store credentials securely
+- Run `XRM: Set Environment Credentials` to save `clientId`, `clientSecret`, and optional `tenantId` for a specific environment into VS Code Secret Storage.  
+- Credentials are **not** written to `.vscode/xrm.config.json`; only non-sensitive settings live there.
+During publish, the extension will pull credentials from Secret Storage if present.
 
 ### Bind and publish resources
 - In the Explorer, right-click any file or folder → **XRM** → **XRM: Resource Actions**.  
