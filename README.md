@@ -23,13 +23,13 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`) and
     { "name": "prod", "url": "https://your-prod.crm.dynamics.com" }
   ],
   "solutions": [
-    { "name": "new_", "displayName": "Default Solution", "default": true },
-    { "name": "cmp_", "displayName": "Component Solution" }
+    { "prefix": "new_", "displayName": "Default Solution", "default": true },
+    { "prefix": "cmp_", "displayName": "Component Solution" }
   ],
   "defaultSolution": "new_"
 }
 ```
-Solution names are treated as prefixes when generating remote paths.
+Publisher prefixes are used when generating remote paths.
 
 ### Store credentials securely
 - Run `XRM: Set Environment Credentials` to save `clientId`, `clientSecret`, and optional `tenantId` for a specific environment into VS Code Secret Storage.  

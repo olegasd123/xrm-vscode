@@ -15,12 +15,12 @@
   ],
   "solutions": [
     {
-      "name": "new_",
+      "prefix": "new_",
       "displayName": "Default Solution",
       "default": true
     },
     {
-      "name": "cmp_",
+      "prefix": "cmp_",
       "displayName": "Component Solution"
     }
   ],

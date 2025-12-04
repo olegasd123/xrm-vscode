@@ -4,7 +4,8 @@ export interface EnvironmentConfig {
 }
 
 export interface SolutionConfig {
-  name: string;
+  /** Publisher prefix used for web resource paths, e.g. new_ */
+  prefix: string;
   displayName?: string;
   default?: boolean;
 }
@@ -12,6 +13,7 @@ export interface SolutionConfig {
 export interface XrmConfiguration {
   environments: EnvironmentConfig[];
   solutions: SolutionConfig[];
+  /** Default publisher prefix */
   defaultSolution?: string;
 }
 

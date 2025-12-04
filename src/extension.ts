@@ -77,8 +77,8 @@ async function addBinding(
   const relative = configuration.getRelativeToWorkspace(targetUri.fsPath);
   const defaultSolution =
     config.defaultSolution ||
-    config.solutions.find((s) => s.default)?.name ||
-    config.solutions[0]?.name;
+    config.solutions.find((s) => s.default)?.prefix ||
+    config.solutions[0]?.prefix;
   const defaultRemote =
     defaultSolution && relative
       ? `${defaultSolution}/${relative.replace(/\\/g, "/")}`
@@ -91,7 +91,7 @@ async function addBinding(
 
   const solution =
     (await ui.promptSolution(
-      config.solutions.map((s) => s.name),
+      config.solutions.map((s) => s.prefix),
       defaultSolution,
     )) || defaultSolution;
 
@@ -154,7 +154,7 @@ async function setDefaultSolution(
       prompt:
         "Enter default solution prefix or pick an existing one to set it globally",
       value: config.defaultSolution,
-      placeHolder: config.solutions.map((s) => s.name).join(", "),
+      placeHolder: config.solutions.map((s) => s.prefix).join(", "),
     })) ?? config.defaultSolution;
 
   if (!candidate) {
@@ -168,12 +168,12 @@ async function setDefaultSolution(
 }
 
 function markDefault(
-  solutions: { name: string; displayName?: string; default?: boolean }[],
+  solutions: { prefix: string; displayName?: string; default?: boolean }[],
   defaultName: string,
 ) {
   return solutions.map((solution) => ({
     ...solution,
-    default: solution.name === defaultName,
+    default: solution.prefix === defaultName,
   }));
 }
 
