@@ -25,7 +25,7 @@ export interface XrmConfiguration {
 
 export interface BindingEntry {
   /** Absolute path to the bound resource */
-  localPath: string;
+  relativeLocalPath: string;
   /** CRM web resource path, e.g. new_/account/form.js */
   remotePath: string;
   /** Solution unique name */

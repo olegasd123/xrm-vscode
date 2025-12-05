@@ -114,10 +114,21 @@ export class ConfigurationService {
       throw new Error("No workspace folder detected.");
     }
 
-    const normalizedLocal = path.normalize(partial.localPath);
+    const normalizedLocal = path.normalize(partial.relativeLocalPath);
+    const workspaceName = path.basename(this.workspaceRoot);
+    const isInsideWorkspace =
+      normalizedLocal.startsWith(this.workspaceRoot + path.sep) ||
+      normalizedLocal === this.workspaceRoot;
+
+    let storedPath = normalizedLocal;
+    if (isInsideWorkspace) {
+      const relative = path.relative(this.workspaceRoot, normalizedLocal);
+      storedPath = relative ? path.join(workspaceName, relative) : workspaceName;
+    }
+
     return {
       ...partial,
-      localPath: normalizedLocal,
+      relativeLocalPath: storedPath,
     };
   }
 
@@ -127,6 +138,24 @@ export class ConfigurationService {
     }
 
     return path.relative(this.workspaceRoot, fsPath);
+  }
+
+  resolveLocalPath(fsPath: string): string {
+    if (path.isAbsolute(fsPath)) {
+      return path.normalize(fsPath);
+    }
+
+    if (!this.workspaceRoot) {
+      return path.normalize(fsPath);
+    }
+
+    const workspaceName = path.basename(this.workspaceRoot);
+    const segments = fsPath.split(path.sep);
+    if (segments[0] === workspaceName) {
+      segments.shift();
+    }
+
+    return path.normalize(path.join(this.workspaceRoot, ...segments));
   }
 
   private getConfigUri(): vscode.Uri {

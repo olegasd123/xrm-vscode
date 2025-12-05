@@ -114,7 +114,7 @@ async function addBinding(
   }
 
   const binding: BindingEntry = {
-    localPath: targetUri.fsPath,
+    relativeLocalPath: targetUri.fsPath,
     remotePath,
     solutionName: solutionConfig.name,
     kind,

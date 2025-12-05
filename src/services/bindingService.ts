@@ -23,7 +23,8 @@ export class BindingService {
     const snapshot = await this.config.loadBindings();
     const normalized = this.config.createBinding(entry);
     const existingIndex = snapshot.bindings.findIndex(
-      (binding) => path.normalize(binding.localPath) === normalized.localPath,
+      (binding) =>
+        path.normalize(binding.relativeLocalPath) === normalized.relativeLocalPath,
     );
 
     if (existingIndex >= 0) {
@@ -40,14 +41,13 @@ export class BindingService {
   }
 
   private pathMatches(binding: BindingEntry, targetPath: string): boolean {
+    const bindingPath = this.config.resolveLocalPath(binding.relativeLocalPath);
     if (binding.kind === "file") {
-      return path.normalize(binding.localPath) === targetPath;
+      return bindingPath === targetPath;
     }
 
-    const normalizedBinding = path.normalize(binding.localPath);
     return (
-      targetPath === normalizedBinding ||
-      targetPath.startsWith(normalizedBinding + path.sep)
+      targetPath === bindingPath || targetPath.startsWith(bindingPath + path.sep)
     );
   }
 }

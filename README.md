@@ -57,8 +57,8 @@ Bindings are stored in `.vscode/xrm.bindings.json`:
 ```jsonc
 {
   "bindings": [
-    { "localPath": "/abs/path/new_/account/form.js", "remotePath": "new_/account/form.js", "solutionName": "CoreWebResources", "kind": "file" },
-    { "localPath": "/abs/path/new_/account", "remotePath": "new_/account", "solutionName": "CoreWebResources", "kind": "folder" }
+    { "relativeLocalPath": "/abs/path/new_/account/form.js", "remotePath": "new_/account/form.js", "solutionName": "CoreWebResources", "kind": "file" },
+    { "relativeLocalPath": "/abs/path/new_/account", "remotePath": "new_/account", "solutionName": "CoreWebResources", "kind": "folder" }
   ]
 }
 ```
