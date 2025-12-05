@@ -95,10 +95,7 @@ async function addBinding(
     config.solutions.find((s) => s.default) ||
     config.solutions[0];
   const defaultPrefix = defaultSolutionConfig?.prefix;
-  const defaultRemote =
-    defaultPrefix && relative
-      ? `${defaultPrefix}/${relative.replace(/\\/g, "/")}`
-      : relative.replace(/\\/g, "/");
+  const defaultRemote = buildDefaultRemotePath(relative, defaultPrefix);
 
   const remotePath = await ui.promptRemotePath(defaultRemote);
   if (!remotePath) {
@@ -127,6 +124,28 @@ async function addBinding(
   vscode.window.showInformationMessage(
     `Bound ${relative || targetUri.fsPath} to ${remotePath} (${solutionConfig.name}).`,
   );
+}
+
+function buildDefaultRemotePath(
+  relativePath: string,
+  defaultPrefix?: string,
+): string {
+  const normalized = relativePath.replace(/\\/g, "/");
+  if (!defaultPrefix) {
+    return normalized;
+  }
+
+  const prefix = defaultPrefix.replace(/[\\/]+$/, "");
+  const segments = normalized.split("/").filter(Boolean);
+  const prefixIndex = segments.findIndex((segment) => segment === prefix);
+  const trimmed =
+    prefixIndex >= 0 ? segments.slice(prefixIndex).join("/") : normalized;
+
+  if (trimmed === prefix || trimmed.startsWith(`${prefix}/`)) {
+    return trimmed;
+  }
+
+  return `${prefix}/${trimmed}`;
 }
 
 async function publishFlow(
