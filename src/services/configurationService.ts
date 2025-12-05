@@ -25,9 +25,37 @@ export class ConfigurationService {
     const exists = await this.exists(uri);
     if (!exists) {
       const defaults: XrmConfiguration = {
-        environments: [],
-        solutions: [],
-        defaultSolution: undefined,
+        environments: [
+          {
+            name: "dev",
+            url: "https://your-dev.crm.dynamics.com",
+            authType: "interactive",
+          },
+          {
+            name: "test",
+            url: "https://your-test.crm.dynamics.com",
+            authType: "interactive",
+          },
+          {
+            name: "prod",
+            url: "https://your-prod.crm.dynamics.com",
+            authType: "interactive",
+          },
+        ],
+        solutions: [
+          {
+            name: "CoreWebResources",
+            prefix: "new_",
+            displayName: "Default Solution",
+            default: true,
+          },
+          {
+            name: "ComponentWebResources",
+            prefix: "cmp_",
+            displayName: "Component Solution",
+          },
+        ],
+        defaultSolution: "CoreWebResources",
       };
       await this.saveConfiguration(defaults);
       return defaults;
