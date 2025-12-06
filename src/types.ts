@@ -21,6 +21,8 @@ export interface XrmConfiguration {
   solutions: SolutionConfig[];
   /** Default solution name (unique name) */
   defaultSolution?: string;
+  /** Supported web resource file extensions (lowercase, dot-prefixed) */
+  webResourceSupportedExtensions?: string[];
 }
 
 export interface BindingEntry {

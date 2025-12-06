@@ -4,7 +4,7 @@ import { ConfigurationService } from "./services/configurationService";
 import { BindingService } from "./services/bindingService";
 import { UiService } from "./services/uiService";
 import { PublisherService } from "./services/publisherService";
-import { BindingEntry } from "./types";
+import { BindingEntry, XrmConfiguration } from "./types";
 import { SecretService } from "./services/secretService";
 import { AuthService } from "./services/authService";
 
@@ -72,7 +72,10 @@ async function openResourceMenu(
     return;
   }
 
-  if (!(await ensureSupportedResource(targetUri))) {
+  const config = await configuration.loadConfiguration();
+  const supportedExtensions = buildSupportedSet(config);
+
+  if (!(await ensureSupportedResource(targetUri, supportedExtensions))) {
     return;
   }
 
@@ -82,7 +85,32 @@ async function openResourceMenu(
     return;
   }
 
-  await publishFlow(binding, targetUri, configuration, ui, publisher, secrets, auth);
+  const stat = await vscode.workspace.fs.stat(targetUri);
+  if (binding.kind === "folder" && stat.type === vscode.FileType.Directory) {
+    await publishFolder(
+      binding,
+      targetUri,
+      supportedExtensions,
+      configuration,
+      ui,
+      publisher,
+      secrets,
+      auth,
+      config,
+    );
+    return;
+  }
+
+  await publishFlow(
+    binding,
+    targetUri,
+    configuration,
+    ui,
+    publisher,
+    secrets,
+    auth,
+    config,
+  );
 }
 
 async function publishResource(
@@ -99,7 +127,10 @@ async function publishResource(
     return;
   }
 
-  if (!(await ensureSupportedResource(targetUri))) {
+  const config = await configuration.loadConfiguration();
+  const supportedExtensions = buildSupportedSet(config);
+
+  if (!(await ensureSupportedResource(targetUri, supportedExtensions))) {
     return;
   }
 
@@ -116,7 +147,32 @@ async function publishResource(
     return;
   }
 
-  await publishFlow(binding, targetUri, configuration, ui, publisher, secrets, auth);
+  const stat = await vscode.workspace.fs.stat(targetUri);
+  if (binding.kind === "folder" && stat.type === vscode.FileType.Directory) {
+    await publishFolder(
+      binding,
+      targetUri,
+      supportedExtensions,
+      configuration,
+      ui,
+      publisher,
+      secrets,
+      auth,
+      config,
+    );
+    return;
+  }
+
+  await publishFlow(
+    binding,
+    targetUri,
+    configuration,
+    ui,
+    publisher,
+    secrets,
+    auth,
+    config,
+  );
 }
 
 async function addBinding(
@@ -200,25 +256,41 @@ async function publishFlow(
   publisher: PublisherService,
   secrets: SecretService,
   auth: AuthService,
+  config?: XrmConfiguration,
 ) {
-  const config = await configuration.loadConfiguration();
-  const env = await ui.pickEnvironment(config.environments);
-  if (!env) {
+  const publishAuth = await pickEnvironmentAndAuth(configuration, ui, secrets, auth, config);
+  if (!publishAuth) {
     return;
   }
 
-  const accessToken =
-    env.authType !== "clientSecret"
-      ? await auth.getAccessToken(env)
-      : undefined;
-  const creds =
-    env.authType === "clientSecret" || !accessToken
-      ? await secrets.getCredentials(env.name)
-      : undefined;
-  await publisher.publish(binding, env, {
-    accessToken,
-    credentials: creds,
-  }, targetUri);
+  await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri);
+}
+
+async function publishFolder(
+  binding: BindingEntry,
+  folderUri: vscode.Uri,
+  supportedExtensions: Set<string>,
+  configuration: ConfigurationService,
+  ui: UiService,
+  publisher: PublisherService,
+  secrets: SecretService,
+  auth: AuthService,
+  config?: XrmConfiguration,
+): Promise<void> {
+  const files = await collectSupportedFiles(folderUri, supportedExtensions);
+  if (!files.length) {
+    vscode.window.showInformationMessage("No supported web resource files found in this folder.");
+    return;
+  }
+
+  const publishAuth = await pickEnvironmentAndAuth(configuration, ui, secrets, auth, config);
+  if (!publishAuth) {
+    return;
+  }
+
+  for (const file of files) {
+    await publisher.publish(binding, publishAuth.env, publishAuth.auth, file);
+  }
 }
 
 async function editConfiguration(
@@ -348,34 +420,62 @@ async function resolveTargetUri(
   return undefined;
 }
 
-async function ensureSupportedResource(uri: vscode.Uri): Promise<boolean> {
+async function pickEnvironmentAndAuth(
+  configuration: ConfigurationService,
+  ui: UiService,
+  secrets: SecretService,
+  auth: AuthService,
+  config?: XrmConfiguration,
+): Promise<
+  | {
+      env: XrmConfiguration["environments"][number];
+      auth: {
+        accessToken?: string;
+        credentials?: Awaited<ReturnType<SecretService["getCredentials"]>>;
+      };
+    }
+  | undefined
+> {
+  const resolvedConfig = config ?? (await configuration.loadConfiguration());
+  const env = await ui.pickEnvironment(resolvedConfig.environments);
+  if (!env) {
+    return undefined;
+  }
+
+  const accessToken =
+    env.authType !== "clientSecret" ? await auth.getAccessToken(env) : undefined;
+  const credentials =
+    env.authType === "clientSecret" || !accessToken
+      ? await secrets.getCredentials(env.name)
+      : undefined;
+
+  if (!accessToken && !credentials) {
+    vscode.window.showErrorMessage(
+      "No credentials available. Sign in interactively or set client credentials first.",
+    );
+    return undefined;
+  }
+
+  return {
+    env,
+    auth: {
+      accessToken,
+      credentials,
+    },
+  };
+}
+
+async function ensureSupportedResource(
+  uri: vscode.Uri,
+  supportedExtensions: Set<string>,
+): Promise<boolean> {
   const stat = await vscode.workspace.fs.stat(uri);
   if (stat.type === vscode.FileType.Directory) {
     return true;
   }
 
   const ext = path.extname(uri.fsPath).toLowerCase();
-  const supported = new Set([
-    ".js",
-    ".ts",
-    ".css",
-    ".htm",
-    ".html",
-    ".xml",
-    ".json",
-    ".resx",
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".xap",
-    ".xsl",
-    ".xslt",
-    ".ico",
-    ".svg",
-  ]);
-
-  if (!supported.has(ext)) {
+  if (!isSupportedExtension(ext, supportedExtensions)) {
     vscode.window.showInformationMessage(
       "XRM actions are available only for supported web resource types.",
     );
@@ -383,6 +483,60 @@ async function ensureSupportedResource(uri: vscode.Uri): Promise<boolean> {
   }
 
   return true;
+}
+
+function isSupportedExtension(
+  ext: string,
+  supportedExtensions: Set<string>,
+): boolean {
+  return supportedExtensions.has(ext);
+}
+
+async function collectSupportedFiles(
+  folder: vscode.Uri,
+  supportedExtensions: Set<string>,
+): Promise<vscode.Uri[]> {
+  const entries = await vscode.workspace.fs.readDirectory(folder);
+  const files: vscode.Uri[] = [];
+
+  for (const [name, type] of entries) {
+    const child = vscode.Uri.joinPath(folder, name);
+    if (type === vscode.FileType.Directory) {
+      files.push(...(await collectSupportedFiles(child, supportedExtensions)));
+    } else if (
+      type === vscode.FileType.File &&
+      isSupportedExtension(path.extname(name).toLowerCase(), supportedExtensions)
+    ) {
+      files.push(child);
+    }
+  }
+
+  return files;
+}
+
+function buildSupportedSet(config: XrmConfiguration): Set<string> {
+  const extensions =
+    config.webResourceSupportedExtensions && config.webResourceSupportedExtensions.length
+      ? config.webResourceSupportedExtensions
+      : [
+          ".js",
+          ".css",
+          ".htm",
+          ".html",
+          ".xml",
+          ".json",
+          ".resx",
+          ".png",
+          ".jpg",
+          ".jpeg",
+          ".gif",
+          ".xap",
+          ".xsl",
+          ".xslt",
+          ".ico",
+          ".svg",
+        ];
+  return new Set(extensions.map((ext) => ext.toLowerCase()));
 }
 
 export function deactivate() {}

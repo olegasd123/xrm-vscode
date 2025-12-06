@@ -56,6 +56,24 @@ export class ConfigurationService {
           },
         ],
         defaultSolution: "CoreWebResources",
+        webResourceSupportedExtensions: [
+          ".js",
+          ".css",
+          ".htm",
+          ".html",
+          ".xml",
+          ".json",
+          ".resx",
+          ".png",
+          ".jpg",
+          ".jpeg",
+          ".gif",
+          ".xap",
+          ".xsl",
+          ".xslt",
+          ".ico",
+          ".svg",
+        ],
       };
       await this.saveConfiguration(defaults);
       return defaults;
@@ -75,7 +93,27 @@ export class ConfigurationService {
       });
     }
 
-    return parsed;
+    return {
+      webResourceSupportedExtensions: parsed.webResourceSupportedExtensions ?? [
+        ".js",
+        ".css",
+        ".htm",
+        ".html",
+        ".xml",
+        ".json",
+        ".resx",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".xap",
+        ".xsl",
+        ".xslt",
+        ".ico",
+        ".svg",
+      ],
+      ...parsed,
+    };
   }
 
   async saveConfiguration(config: XrmConfiguration): Promise<void> {
