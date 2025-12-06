@@ -72,7 +72,7 @@ async function openResourceMenu(
     return;
   }
 
-  await publishFlow(binding, configuration, ui, publisher, secrets, auth);
+  await publishFlow(binding, targetUri, configuration, ui, publisher, secrets, auth);
 }
 
 async function addBinding(
@@ -150,6 +150,7 @@ function buildDefaultRemotePath(
 
 async function publishFlow(
   binding: BindingEntry,
+  targetUri: vscode.Uri,
   configuration: ConfigurationService,
   ui: UiService,
   publisher: PublisherService,
@@ -173,7 +174,7 @@ async function publishFlow(
   await publisher.publish(binding, env, {
     accessToken,
     credentials: creds,
-  });
+  }, targetUri);
 }
 
 async function editConfiguration(

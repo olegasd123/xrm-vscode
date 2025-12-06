@@ -49,7 +49,7 @@ During publish, the extension prefers interactive tokens; it falls back to store
 ### Bind and publish resources
 - In the Explorer, right-click any file or folder → **XRM** → **XRM: Resource Actions**.  
   - If unbound, you'll be prompted for the CRM path and solution.  
-  - If already bound, you'll pick an environment and the extension will publish (stubbed).
+  - If already bound, you'll pick an environment and the extension will publish it to CRM.
 - Run `XRM: Bind Resource` from the Command Palette to bind the active file/folder.
 - Run `XRM: Set Default Solution` to update the global default solution.
 
@@ -64,6 +64,6 @@ Bindings are stored in `.vscode/xrm.bindings.json`:
 ```
 
 ### Notes and next steps
-- Publish logic is stubbed with an output channel; hook CRM SDK calls in `src/services/publisherService.ts`.
+- Publish uses the Dataverse Web API to create/update the web resource, add it to the selected solution, and call `PublishXml` for that resource.
 - Context menu entries rely on a single **XRM** action that branches based on binding existence for now.
 - The service-layer separation (`configurationService`, `bindingService`, `publisherService`) is intended for scaling to assemblies or other asset types later.
