@@ -36,6 +36,7 @@ export class PublisherService {
       this.output.appendLine(
         `[${started}] Publishing ${binding.remotePath} to ${env.name} (${env.url})...`,
       );
+      this.output.show(true);
     }
 
     try {
@@ -71,7 +72,6 @@ export class PublisherService {
 
       await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
       await this.publishWebResource(apiRoot, token, resourceId);
-      this.output.show(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.output.appendLine(`Publish failed: ${message}`);
@@ -143,7 +143,7 @@ export class PublisherService {
     if (auth.accessToken) {
       if (logAuth) {
         this.output.appendLine(
-          "Using interactive access token from VS Code authentication provider.",
+          "Using interactive access token.",
         );
       }
       return auth.accessToken;
@@ -439,7 +439,7 @@ export class PublisherService {
       throw await this.buildError("Failed to publish web resource", response);
     }
 
-    this.output.appendLine("Published web resource.");
+    this.output.appendLine("Web resource has been published.");
   }
 
   private async parseJsonIfAny(response: Response): Promise<unknown> {

@@ -93,27 +93,7 @@ export class ConfigurationService {
       });
     }
 
-    return {
-      webResourceSupportedExtensions: parsed.webResourceSupportedExtensions ?? [
-        ".js",
-        ".css",
-        ".htm",
-        ".html",
-        ".xml",
-        ".json",
-        ".resx",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".xap",
-        ".xsl",
-        ".xslt",
-        ".ico",
-        ".svg",
-      ],
-      ...parsed,
-    };
+    return parsed;
   }
 
   async saveConfiguration(config: XrmConfiguration): Promise<void> {
