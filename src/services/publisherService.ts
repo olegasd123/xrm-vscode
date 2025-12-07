@@ -3,6 +3,16 @@ import * as path from "path";
 import { BindingEntry, EnvironmentConfig } from "../types";
 import { EnvironmentCredentials } from "./secretService";
 
+// Formatting helpers for OutputChannel (plain text)
+const fmt = {
+  source: (s: string) => `[${s}]`,
+  resource: (s: string) => `${s}`,
+  env: (s: string) => `「 ${s} 」`,
+  url: (s: string) => `<${s}>`,
+  path: (s: string) => s,
+  solution: (s: string) => `[${s}]`,
+};
+
 export interface PublishAuth {
   accessToken?: string;
   credentials?: EnvironmentCredentials;
@@ -33,8 +43,9 @@ export class PublisherService {
     const shouldLogAuth = options.logAuth ?? true;
     const started = new Date().toISOString();
     if (shouldLogHeader) {
+      this.output.appendLine('-------------------------------');
       this.output.appendLine(
-        `[${started}] Publishing ${binding.remotePath} to ${env.name} (${env.url})...`,
+        `[${started}] Publishing ${fmt.source(binding.remotePath)} → ${fmt.env(env.name)} ${fmt.url(env.url)}`,
       );
       this.output.show(true);
     }
@@ -54,37 +65,37 @@ export class PublisherService {
       const webResourceType = this.detectType(localPath);
       const displayName = path.posix.basename(remotePath);
 
-      this.output.appendLine(`Uploading ${remotePath} from ${localPath}...`);
+      this.output.appendLine(`  ${fmt.resource(remotePath)} ← ${localPath}`);
       const existingId = await this.findWebResource(apiRoot, token, remotePath);
       const allowCreate = env.createMissingWebResources !== false;
-      const isNewResource = !existingId;
-      const resourceId = existingId
-        ? await this.updateWebResource(apiRoot, token, existingId, {
-            content: encoded,
-            displayName,
-            name: remotePath,
-            type: webResourceType,
-          })
-        : allowCreate
-          ? await this.createWebResource(apiRoot, token, {
-              content: encoded,
-              displayName,
-              name: remotePath,
-              type: webResourceType,
-            })
-          : await Promise.reject(
-              new Error(
-                `Web resource ${remotePath} does not exist and creation is disabled for ${env.name}.`,
-              ),
-            );
 
-      if (isNewResource) {
+      if (!existingId && !allowCreate) {
+        this.output.appendLine(`  ✗ Resource does not exist and creation is disabled for ${fmt.env(env.name)}`);
+        return;
+      }
+
+      let resourceId: string;
+      if (existingId) {
+        resourceId = await this.updateWebResource(apiRoot, token, existingId, {
+          content: encoded,
+          displayName,
+          name: remotePath,
+          type: webResourceType,
+        });
+      } else {
+        resourceId = await this.createWebResource(apiRoot, token, {
+          content: encoded,
+          displayName,
+          name: remotePath,
+          type: webResourceType,
+        });
         await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
       }
+
       await this.publishWebResource(apiRoot, token, resourceId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.output.appendLine(`Publish failed: ${message}`);
+      this.output.appendLine(`✗ Publish failed: ${message}`);
       this.output.show(true);
       vscode.window.showErrorMessage(`XRM publish failed: ${message}`);
     }
@@ -152,20 +163,15 @@ export class PublisherService {
   ): Promise<string | undefined> {
     if (auth.accessToken) {
       if (logAuth) {
-        this.output.appendLine(
-          "Using interactive access token.",
-        );
+        this.output.appendLine("  ↳ auth: interactive token");
       }
       return auth.accessToken;
     }
 
     if (auth.credentials) {
       if (logAuth) {
-        this.output.appendLine(
-          `Using clientId ${auth.credentials.clientId} ${
-            auth.credentials.tenantId ? `(tenant ${auth.credentials.tenantId})` : ""
-          } from secret storage.`,
-        );
+        const tenant = auth.credentials.tenantId ? ` tenant=${auth.credentials.tenantId}` : "";
+        this.output.appendLine(`  ↳ auth: clientId=${auth.credentials.clientId}${tenant}`);
       }
       return this.acquireTokenWithClientCredentials(env, auth.credentials);
     }
@@ -270,7 +276,7 @@ export class PublisherService {
       throw await this.buildError("Failed to update web resource", response);
     }
 
-    this.output.appendLine("Updated existing web resource.");
+    this.output.appendLine("  ✓ updated");
     return id;
   }
 
@@ -311,7 +317,7 @@ export class PublisherService {
       throw new Error("Web resource created but no identifier returned.");
     }
 
-    this.output.appendLine("Created new web resource.");
+    this.output.appendLine("  ✓ created");
     return id;
   }
 
@@ -368,7 +374,7 @@ export class PublisherService {
       );
     }
 
-    this.output.appendLine(`Added to solution ${solutionName}.`);
+    this.output.appendLine(`  ✓ added to solution ${fmt.solution(solutionName)}`);
   }
 
   private async getSolutionId(
@@ -449,7 +455,7 @@ export class PublisherService {
       throw await this.buildError("Failed to publish web resource", response);
     }
 
-    this.output.appendLine("Web resource has been published.");
+    this.output.appendLine("  ✓ published");
   }
 
   private async parseJsonIfAny(response: Response): Promise<unknown> {

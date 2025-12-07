@@ -76,7 +76,7 @@ test("resolveToken uses interactive token when provided", async () => {
 
   assert.strictEqual(token, "interactive-token");
   const logs = (publisher as any).output.logs;
-  assert.ok(logs.some((line: string) => line.includes("Using interactive access token")));
+  assert.ok(logs.some((line: string) => line.includes("auth: interactive token")));
 });
 
 test("resolveToken falls back to client credentials when interactive token missing", async () => {
@@ -97,6 +97,6 @@ test("resolveToken falls back to client credentials when interactive token missi
   assert.strictEqual(token, "client-token");
   const logs = (publisher as any).output.logs;
   assert.ok(
-    logs.some((line: string) => line.includes("Using clientId id")),
+    logs.some((line: string) => line.includes("auth: clientId=id")),
   );
 });
