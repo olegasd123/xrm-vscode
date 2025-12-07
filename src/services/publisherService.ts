@@ -5,7 +5,7 @@ import { EnvironmentCredentials } from "./secretService";
 
 // Formatting helpers for OutputChannel (plain text)
 const fmt = {
-  source: (s: string) => `[${s}]`,
+  remote: (s: string) => `[${s}]`,
   resource: (s: string) => `${s}`,
   env: (s: string) => `「 ${s} 」`,
   url: (s: string) => `<${s}>`,
@@ -45,7 +45,7 @@ export class PublisherService {
     if (shouldLogHeader) {
       this.output.appendLine('-------------------------------');
       this.output.appendLine(
-        `[${started}] Publishing ${fmt.source(binding.remotePath)} → ${fmt.env(env.name)} ${fmt.url(env.url)}`,
+        `[${started}] Publishing ${fmt.remote(binding.remotePath)} → ${fmt.env(env.name)} ${fmt.url(env.url)}`,
       );
       this.output.show(true);
     }
