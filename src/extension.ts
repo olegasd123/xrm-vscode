@@ -263,7 +263,8 @@ async function publishFlow(
     return;
   }
 
-  await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri);
+  const result = await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri);
+  publisher.logSummary(result);
 }
 
 async function publishFolder(
@@ -289,11 +290,11 @@ async function publishFolder(
   }
 
   files.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
-  const total = files.length;
-  for (let i = 0; i < total; i++) {
+  const totals = { created: 0, updated: 0, skipped: 0, failed: 0 };
+  for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const isFirst = i === 0;
-    await publisher.publish(
+    const result = await publisher.publish(
       binding,
       publishAuth.env,
       publishAuth.auth,
@@ -303,7 +304,12 @@ async function publishFolder(
         logAuth: isFirst,
       },
     );
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.skipped += result.skipped;
+    totals.failed += result.failed;
   }
+  publisher.logSummary(totals);
 }
 
 async function editConfiguration(

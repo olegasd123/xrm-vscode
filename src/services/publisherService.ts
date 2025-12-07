@@ -25,6 +25,13 @@ export interface PublishOptions {
   logAuth?: boolean;
 }
 
+export interface PublishResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+}
+
 export class PublisherService {
   private readonly output: vscode.OutputChannel;
 
@@ -38,7 +45,8 @@ export class PublisherService {
     auth: PublishAuth = {},
     targetUri?: vscode.Uri,
     options: PublishOptions = {},
-  ): Promise<void> {
+  ): Promise<PublishResult> {
+    const result: PublishResult = { created: 0, updated: 0, skipped: 0, failed: 0 };
     const shouldLogHeader = options.logHeader ?? true;
     const shouldLogAuth = options.logAuth ?? true;
     const started = new Date().toISOString();
@@ -71,7 +79,8 @@ export class PublisherService {
 
       if (!existingId && !allowCreate) {
         this.output.appendLine(`  ✗ Resource does not exist and creation is disabled for ${fmt.env(env.name)}`);
-        return;
+        result.skipped = 1;
+        return result;
       }
 
       let resourceId: string;
@@ -82,6 +91,7 @@ export class PublisherService {
           name: remotePath,
           type: webResourceType,
         });
+        result.updated = 1;
       } else {
         resourceId = await this.createWebResource(apiRoot, token, {
           content: encoded,
@@ -90,14 +100,29 @@ export class PublisherService {
           type: webResourceType,
         });
         await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
+        result.created = 1;
       }
 
       await this.publishWebResource(apiRoot, token, resourceId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.output.appendLine(`✗ Publish failed: ${message}`);
+      this.output.appendLine(`  ✗ Publish failed: ${message}`);
       this.output.show(true);
       vscode.window.showErrorMessage(`XRM publish failed: ${message}`);
+      result.failed = 1;
+    }
+    return result;
+  }
+
+  logSummary(result: PublishResult): void {
+    const parts: string[] = [];
+    if (result.created) parts.push(`${result.created} created`);
+    if (result.updated) parts.push(`${result.updated} updated`);
+    if (result.skipped) parts.push(`${result.skipped} skipped`);
+    if (result.failed) parts.push(`${result.failed} failed`);
+    if (parts.length) {
+      this.output.appendLine(`  ─────`);
+      this.output.appendLine(`  Total: ${parts.join(", ")}`);
     }
   }
 
