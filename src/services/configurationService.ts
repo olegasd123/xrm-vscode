@@ -46,13 +46,11 @@ export class ConfigurationService {
           {
             name: "CoreWebResources",
             prefix: "new_",
-            displayName: "Default Solution",
             default: true,
           },
           {
             name: "ComponentWebResources",
             prefix: "cmp_",
-            displayName: "Component Solution",
           },
         ],
         defaultSolution: "CoreWebResources",

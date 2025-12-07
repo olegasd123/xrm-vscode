@@ -45,14 +45,13 @@ export class UiService {
       if (!entered) {
         return undefined;
       }
-      return { name: entered, prefix: "", displayName: entered };
+      return { name: entered, prefix: "" };
     }
 
     const pick = await vscode.window.showQuickPick(
       solutions.map((solution) => ({
         label: solution.prefix || solution.name,
         description: solution.name,
-        detail: solution.displayName,
         picked: solution.name === defaultSolutionName,
         solution,
       })),

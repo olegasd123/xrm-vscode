@@ -345,7 +345,6 @@ function markDefault(
   solutions: {
     prefix: string;
     name: string;
-    displayName?: string;
     default?: boolean;
   }[],
   defaultName: string,

@@ -12,7 +12,6 @@ export interface SolutionConfig {
   name: string;
   /** Publisher prefix used for web resource paths, e.g. new_ */
   prefix: string;
-  displayName?: string;
   default?: boolean;
 }
 
