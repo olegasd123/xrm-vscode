@@ -19,8 +19,8 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`) and
 ```jsonc
 {
   "environments": [
-    { "name": "dev", "url": "https://your-dev.crm.dynamics.com", "authType": "interactive", "createMissingWebResources": false },
-    { "name": "prod", "url": "https://your-prod.crm.dynamics.com", "authType": "clientSecret", "createMissingWebResources": false }
+    { "name": "dev", "url": "https://your-dev.crm.dynamics.com", "authType": "interactive", "createMissingWebResources": true },
+    { "name": "prod", "url": "https://your-prod.crm.dynamics.com", "authType": "interactive", "createMissingWebResources": false }
   ],
   "solutions": [
     {

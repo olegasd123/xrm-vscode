@@ -57,6 +57,7 @@ export class PublisherService {
       this.output.appendLine(`Uploading ${remotePath} from ${localPath}...`);
       const existingId = await this.findWebResource(apiRoot, token, remotePath);
       const allowCreate = env.createMissingWebResources !== false;
+      const isNewResource = !existingId;
       const resourceId = existingId
         ? await this.updateWebResource(apiRoot, token, existingId, {
             content: encoded,
@@ -77,7 +78,9 @@ export class PublisherService {
               ),
             );
 
-      await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
+      if (isNewResource) {
+        await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
+      }
       await this.publishWebResource(apiRoot, token, resourceId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
