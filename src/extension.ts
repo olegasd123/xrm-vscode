@@ -7,6 +7,7 @@ import { PublisherService } from "./services/publisherService";
 import { BindingEntry, XrmConfiguration } from "./types";
 import { SecretService } from "./services/secretService";
 import { AuthService } from "./services/authService";
+import { StatusBarService } from "./services/statusBarService";
 
 export async function activate(context: vscode.ExtensionContext) {
   const configuration = new ConfigurationService();
@@ -15,6 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const publisher = new PublisherService();
   const secrets = new SecretService(context.secrets);
   const auth = new AuthService();
+  const statusBar = new StatusBarService("xrm.publishLastResource");
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -28,12 +30,35 @@ export async function activate(context: vscode.ExtensionContext) {
           publisher,
           secrets,
           auth,
+          statusBar,
         ),
     ),
     vscode.commands.registerCommand(
       "xrm.publishResource",
       async (uri?: vscode.Uri) =>
-        publishResource(uri, configuration, bindings, ui, publisher, secrets, auth),
+        publishResource(
+          uri,
+          configuration,
+          bindings,
+          ui,
+          publisher,
+          secrets,
+          auth,
+          statusBar,
+        ),
+    ),
+    vscode.commands.registerCommand(
+      "xrm.publishLastResource",
+      async () =>
+        publishLastResource(
+          configuration,
+          bindings,
+          ui,
+          publisher,
+          secrets,
+          auth,
+          statusBar,
+        ),
     ),
     vscode.commands.registerCommand(
       "xrm.configureEnvironments",
@@ -55,6 +80,67 @@ export async function activate(context: vscode.ExtensionContext) {
       "xrm.signInInteractive",
       async () => signInInteractive(configuration, ui, auth),
     ),
+    statusBar,
+  );
+}
+
+async function publishLastResource(
+  configuration: ConfigurationService,
+  bindings: BindingService,
+  ui: UiService,
+  publisher: PublisherService,
+  secrets: SecretService,
+  auth: AuthService,
+  statusBar: StatusBarService,
+): Promise<void> {
+  const last = statusBar.getLastPublish();
+  if (!last) {
+    vscode.window.showInformationMessage("Publish a resource first to enable quick publish.");
+    return;
+  }
+
+  try {
+    await vscode.workspace.fs.stat(last.targetUri);
+  } catch {
+    vscode.window.showWarningMessage("Last published resource no longer exists.");
+    statusBar.clear();
+    return;
+  }
+
+  const config = await configuration.loadConfiguration();
+  const supportedExtensions = buildSupportedSet(config);
+  const binding = (await bindings.getBinding(last.targetUri)) ?? last.binding;
+  const preferredEnvName = last.environment.name;
+
+  if (last.isFolder) {
+    await publishFolder(
+      binding,
+      last.targetUri,
+      supportedExtensions,
+      configuration,
+      bindings,
+      ui,
+      publisher,
+      secrets,
+      auth,
+      statusBar,
+      config,
+      preferredEnvName,
+    );
+    return;
+  }
+
+  await publishFlow(
+    binding,
+    last.targetUri,
+    configuration,
+    ui,
+    publisher,
+    secrets,
+    auth,
+    statusBar,
+    config,
+    preferredEnvName,
   );
 }
 
@@ -66,6 +152,7 @@ async function openResourceMenu(
   publisher: PublisherService,
   secrets: SecretService,
   auth: AuthService,
+  statusBar: StatusBarService,
 ) {
   const targetUri = await resolveTargetUri(uri);
   if (!targetUri) {
@@ -97,6 +184,7 @@ async function openResourceMenu(
       publisher,
       secrets,
       auth,
+      statusBar,
       config,
     );
     return;
@@ -110,6 +198,7 @@ async function openResourceMenu(
     publisher,
     secrets,
     auth,
+    statusBar,
     config,
   );
 }
@@ -122,6 +211,7 @@ async function publishResource(
   publisher: PublisherService,
   secrets: SecretService,
   auth: AuthService,
+  statusBar: StatusBarService,
 ): Promise<void> {
   const targetUri = await resolveTargetUri(uri);
   if (!targetUri) {
@@ -160,6 +250,7 @@ async function publishResource(
       publisher,
       secrets,
       auth,
+      statusBar,
       config,
     );
     return;
@@ -173,6 +264,7 @@ async function publishResource(
     publisher,
     secrets,
     auth,
+    statusBar,
     config,
   );
 }
@@ -258,15 +350,30 @@ async function publishFlow(
   publisher: PublisherService,
   secrets: SecretService,
   auth: AuthService,
+  statusBar: StatusBarService,
   config?: XrmConfiguration,
+  preferredEnvName?: string,
 ) {
-  const publishAuth = await pickEnvironmentAndAuth(configuration, ui, secrets, auth, config);
+  const publishAuth = await pickEnvironmentAndAuth(
+    configuration,
+    ui,
+    secrets,
+    auth,
+    config,
+    preferredEnvName,
+  );
   if (!publishAuth) {
     return;
   }
 
   const result = await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri);
   publisher.logSummary(result);
+  statusBar.setLastPublish({
+    binding,
+    environment: publishAuth.env,
+    targetUri,
+    isFolder: false,
+  });
 }
 
 async function publishFolder(
@@ -279,7 +386,9 @@ async function publishFolder(
   publisher: PublisherService,
   secrets: SecretService,
   auth: AuthService,
+  statusBar: StatusBarService,
   config?: XrmConfiguration,
+  preferredEnvName?: string,
 ): Promise<void> {
   const files = await collectSupportedFiles(folderUri, supportedExtensions);
   if (!files.length) {
@@ -287,7 +396,14 @@ async function publishFolder(
     return;
   }
 
-  const publishAuth = await pickEnvironmentAndAuth(configuration, ui, secrets, auth, config);
+  const publishAuth = await pickEnvironmentAndAuth(
+    configuration,
+    ui,
+    secrets,
+    auth,
+    config,
+    preferredEnvName,
+  );
   if (!publishAuth) {
     return;
   }
@@ -315,6 +431,12 @@ async function publishFolder(
     totals.failed += result.failed;
   }
   publisher.logSummary(totals);
+  statusBar.setLastPublish({
+    binding: folderBinding,
+    environment: publishAuth.env,
+    targetUri: folderUri,
+    isFolder: true,
+  });
 }
 
 async function editConfiguration(
@@ -449,6 +571,7 @@ async function pickEnvironmentAndAuth(
   secrets: SecretService,
   auth: AuthService,
   config?: XrmConfiguration,
+  preferredEnvName?: string,
 ): Promise<
   | {
       env: XrmConfiguration["environments"][number];
@@ -460,9 +583,22 @@ async function pickEnvironmentAndAuth(
   | undefined
 > {
   const resolvedConfig = config ?? (await configuration.loadConfiguration());
-  const env = await ui.pickEnvironment(resolvedConfig.environments);
-  if (!env) {
-    return undefined;
+  let env: XrmConfiguration["environments"][number] | undefined;
+  if (preferredEnvName) {
+    env = resolvedConfig.environments.find(
+      (candidate) => candidate.name === preferredEnvName,
+    );
+    if (!env) {
+      vscode.window.showErrorMessage(
+        `Environment ${preferredEnvName} is not configured.`,
+      );
+      return undefined;
+    }
+  } else {
+    env = await ui.pickEnvironment(resolvedConfig.environments);
+    if (!env) {
+      return undefined;
+    }
   }
 
   const accessToken =

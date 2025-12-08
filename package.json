@@ -18,6 +18,7 @@
     "onCommand:xrm.publishResource",
     "onCommand:xrm.signInInteractive",
     "onCommand:xrm.setEnvironmentCredentials",
+    "onCommand:xrm.publishLastResource",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
@@ -46,6 +47,11 @@
       {
         "command": "xrm.publishResource",
         "title": "Publish Resource",
+        "category": "XRM"
+      },
+      {
+        "command": "xrm.publishLastResource",
+        "title": "Publish Last Resource",
         "category": "XRM"
       },
       {
@@ -103,6 +109,9 @@
         },
         {
           "command": "xrm.publishResource"
+        },
+        {
+          "command": "xrm.publishLastResource"
         },
         {
           "command": "xrm.setEnvironmentCredentials"

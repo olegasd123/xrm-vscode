@@ -1,0 +1,38 @@
+## XRM VS Code Extension — Improvement Ideas
+
+- **Publishing ergonomics**
+  - Remember the last picked environment per workspace and preselect it in the Quick Pick.
+  - Offer a “Publish & Open in Browser” action that deep-links to the web resource record.
+  - Show a concise toast when a publish succeeds (with counters) instead of only writing to the output channel.
+  - Support a “watch” mode to auto-publish on save for bound files, gated by a toggle.
+
+- **Speed & efficiency**
+  - Short-circuit folder publishing by hashing local files and skipping unchanged resources (compare to an on-disk cache keyed by remotePath + mtime + size).
+  - Batch folder publishes with limited concurrency (e.g., pool of 3–5) and reuse a single auth token across all items.
+  - Allow piping compiled assets: if the source is `.ts` or `.scss`, run the configured build task first and publish the generated output path.
+  - Cache configuration/bindings in memory per session to avoid rereading JSON files on every command invocation.
+  - Add a retry policy with exponential backoff for transient 429/5xx responses to reduce manual reruns.
+
+- **Reliability & UX safeguards**
+  - Add preflight validation: verify solution exists and remotePath uniqueness before uploading the content payload.
+  - Provide clearer error surfaces: bubble up Dataverse error codes and correlation IDs, and show a “copy error details” button.
+  - Let users choose whether missing web resources should be created per publish invocation (override the env default).
+  - Add cancellation tokens to abort long-running folder publishes and surface partial results cleanly.
+  - Support per-environment default solution overrides to avoid mispublishing to the global default.
+
+- **Codebase improvements**
+  - Wrap fetch with a typed client that enforces timeouts, consistent headers, and structured error objects; share across services.
+  - Centralize OutputChannel formatting helpers and reuse logging code to avoid duplication and keep logs uniform.
+  - Normalize remote paths in one utility (including case rules, trailing slashes) to reduce subtle mismatches.
+  - Split `PublisherService.publish` into smaller units (resolve paths, acquire token, sync resource, publish) for easier testing.
+  - Replace repeated `JSON.parse(JSON.stringify())` style parsing with Zod/io-ts schemas to validate `xrm.config.json` and `xrm.bindings.json`.
+
+- **Security & compliance**
+  - Avoid logging any part of tokens/credentials and mark secrets as `MaskedString` in telemetry when added later.
+  - Allow configuring `resource` separately from `url` per environment to support sovereign clouds and custom apps.
+  - Add an opt-in user agent (e.g., `XRM-VSCode/{version}`) so server logs can identify extension traffic.
+
+- **Testing & tooling**
+  - Add unit tests for path resolution, binding precedence, and publish branching (create vs update vs skip).
+  - Introduce integration tests using mocked fetch responses to assert request shapes and error handling.
+  - Wire up linting/formatting (ESLint + Prettier) and CI to guard against regressions before publishing the extension.
