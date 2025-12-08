@@ -4,6 +4,7 @@ import { EnvironmentConfig, SolutionConfig } from "../types";
 export class UiService {
   async pickEnvironment(
     environments: EnvironmentConfig[],
+    defaultEnvName?: string,
   ): Promise<EnvironmentConfig | undefined> {
     if (!environments.length) {
       vscode.window.showErrorMessage(
@@ -12,10 +13,15 @@ export class UiService {
       return undefined;
     }
 
+    const defaultEnv = defaultEnvName
+      ? environments.find((env) => env.name === defaultEnvName)
+      : undefined;
+
     const pick = await vscode.window.showQuickPick(
       environments.map((env) => ({
         label: env.name,
         description: env.url,
+        picked: defaultEnv ? env.name === defaultEnv.name : false,
         env,
       })),
       { placeHolder: "Select environment for publish" },

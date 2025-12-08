@@ -8,6 +8,7 @@ import { BindingEntry, XrmConfiguration } from "./types";
 import { SecretService } from "./services/secretService";
 import { AuthService } from "./services/authService";
 import { StatusBarService } from "./services/statusBarService";
+import { LastSelectionService } from "./services/lastSelectionService";
 
 export async function activate(context: vscode.ExtensionContext) {
   const configuration = new ConfigurationService();
@@ -17,6 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const secrets = new SecretService(context.secrets);
   const auth = new AuthService();
   const statusBar = new StatusBarService("xrm.publishLastResource");
+  const lastSelection = new LastSelectionService(context.workspaceState);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -31,6 +33,7 @@ export async function activate(context: vscode.ExtensionContext) {
           secrets,
           auth,
           statusBar,
+          lastSelection,
         ),
     ),
     vscode.commands.registerCommand(
@@ -45,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
           secrets,
           auth,
           statusBar,
+          lastSelection,
         ),
     ),
     vscode.commands.registerCommand(
@@ -58,6 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
           secrets,
           auth,
           statusBar,
+          lastSelection,
         ),
     ),
     vscode.commands.registerCommand(
@@ -78,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "xrm.signInInteractive",
-      async () => signInInteractive(configuration, ui, auth),
+      async () => signInInteractive(configuration, ui, auth, lastSelection),
     ),
     statusBar,
   );
@@ -92,6 +97,7 @@ async function publishLastResource(
   secrets: SecretService,
   auth: AuthService,
   statusBar: StatusBarService,
+  lastSelection: LastSelectionService,
 ): Promise<void> {
   const last = statusBar.getLastPublish();
   if (!last) {
@@ -124,6 +130,7 @@ async function publishLastResource(
       secrets,
       auth,
       statusBar,
+      lastSelection,
       config,
       preferredEnvName,
     );
@@ -139,6 +146,7 @@ async function publishLastResource(
     secrets,
     auth,
     statusBar,
+    lastSelection,
     config,
     preferredEnvName,
   );
@@ -153,6 +161,7 @@ async function openResourceMenu(
   secrets: SecretService,
   auth: AuthService,
   statusBar: StatusBarService,
+  lastSelection: LastSelectionService,
 ) {
   const targetUri = await resolveTargetUri(uri);
   if (!targetUri) {
@@ -185,6 +194,7 @@ async function openResourceMenu(
       secrets,
       auth,
       statusBar,
+      lastSelection,
       config,
     );
     return;
@@ -199,6 +209,7 @@ async function openResourceMenu(
     secrets,
     auth,
     statusBar,
+    lastSelection,
     config,
   );
 }
@@ -212,6 +223,7 @@ async function publishResource(
   secrets: SecretService,
   auth: AuthService,
   statusBar: StatusBarService,
+  lastSelection: LastSelectionService,
 ): Promise<void> {
   const targetUri = await resolveTargetUri(uri);
   if (!targetUri) {
@@ -251,6 +263,7 @@ async function publishResource(
       secrets,
       auth,
       statusBar,
+      lastSelection,
       config,
     );
     return;
@@ -265,6 +278,7 @@ async function publishResource(
     secrets,
     auth,
     statusBar,
+    lastSelection,
     config,
   );
 }
@@ -351,6 +365,7 @@ async function publishFlow(
   secrets: SecretService,
   auth: AuthService,
   statusBar: StatusBarService,
+  lastSelection: LastSelectionService,
   config?: XrmConfiguration,
   preferredEnvName?: string,
 ) {
@@ -359,6 +374,7 @@ async function publishFlow(
     ui,
     secrets,
     auth,
+    lastSelection,
     config,
     preferredEnvName,
   );
@@ -387,6 +403,7 @@ async function publishFolder(
   secrets: SecretService,
   auth: AuthService,
   statusBar: StatusBarService,
+  lastSelection: LastSelectionService,
   config?: XrmConfiguration,
   preferredEnvName?: string,
 ): Promise<void> {
@@ -401,6 +418,7 @@ async function publishFolder(
     ui,
     secrets,
     auth,
+    lastSelection,
     config,
     preferredEnvName,
   );
@@ -536,12 +554,18 @@ async function signInInteractive(
   configuration: ConfigurationService,
   ui: UiService,
   auth: AuthService,
+  lastSelection: LastSelectionService,
 ): Promise<void> {
   const config = await configuration.loadConfiguration();
-  const env = await ui.pickEnvironment(config.environments);
+  const env = await ui.pickEnvironment(
+    config.environments,
+    lastSelection.getLastEnvironment(),
+  );
   if (!env) {
     return;
   }
+
+  await lastSelection.setLastEnvironment(env.name);
 
   const token = await auth.getAccessToken(env);
   if (token) {
@@ -570,6 +594,7 @@ async function pickEnvironmentAndAuth(
   ui: UiService,
   secrets: SecretService,
   auth: AuthService,
+  lastSelection: LastSelectionService,
   config?: XrmConfiguration,
   preferredEnvName?: string,
 ): Promise<
@@ -595,11 +620,14 @@ async function pickEnvironmentAndAuth(
       return undefined;
     }
   } else {
-    env = await ui.pickEnvironment(resolvedConfig.environments);
+    const rememberedEnv = lastSelection.getLastEnvironment();
+    env = await ui.pickEnvironment(resolvedConfig.environments, rememberedEnv);
     if (!env) {
       return undefined;
     }
   }
+
+  await lastSelection.setLastEnvironment(env.name);
 
   const accessToken =
     env.authType !== "clientSecret" ? await auth.getAccessToken(env) : undefined;
