@@ -74,7 +74,7 @@ export class PublisherService {
       if (options.cache) {
         content = await this.readFile(localPath);
         hash = this.hashContent(content);
-        if (await options.cache.isUnchanged(remotePath, fileStat, hash)) {
+        if (await options.cache.isUnchanged(remotePath, fileStat, hash, env.name)) {
           this.output.appendLine(`  ↷ ${fmt.resource(remotePath)} has been skipped (unchanged)`);
           result.skipped = 1;
           return result;
@@ -136,7 +136,7 @@ export class PublisherService {
 
       await this.publishSerial(apiRoot, token, resourceId, remotePath, cancellationToken);
       if (options.cache && hash) {
-        await options.cache.update(remotePath, fileStat, hash);
+        await options.cache.update(remotePath, fileStat, hash, env.name);
       }
     } catch (error) {
       if (this.isCancellationError(error)) {

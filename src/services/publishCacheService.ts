@@ -17,11 +17,12 @@ export class PublishCacheService {
     remotePath: string,
     stat: vscode.FileStat,
     hash: string,
+    environment?: string,
   ): Promise<boolean> {
     if (!(await this.ensureLoaded())) {
       return false;
     }
-    const key = this.normalizeKey(remotePath);
+    const key = this.normalizeKey(remotePath, environment);
     const entry = this.cache?.[key];
     if (!entry || entry.hash !== hash) {
       return false;
@@ -44,11 +45,12 @@ export class PublishCacheService {
     remotePath: string,
     stat: vscode.FileStat,
     hash: string,
+    environment?: string,
   ): Promise<void> {
     if (!(await this.ensureLoaded())) {
       return;
     }
-    const key = this.normalizeKey(remotePath);
+    const key = this.normalizeKey(remotePath, environment);
     this.cache![key] = {
       mtime: stat.mtime,
       size: stat.size,
@@ -57,8 +59,9 @@ export class PublishCacheService {
     await this.save();
   }
 
-  private normalizeKey(remotePath: string): string {
-    return remotePath.replace(/\\/g, "/");
+  private normalizeKey(remotePath: string, environment?: string): string {
+    const envKey = (environment || "default").toLowerCase();
+    return `${envKey}::${remotePath.replace(/\\/g, "/")}`;
   }
 
   private async ensureLoaded(): Promise<boolean> {
