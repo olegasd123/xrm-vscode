@@ -21,10 +21,7 @@ export interface PublishAuth {
 }
 
 export interface PublishOptions {
-  /** Log the header line with timestamp/resource/env. Defaults to true. */
-  logHeader?: boolean;
-  /** Log which auth source was used. Defaults to true. */
-  logAuth?: boolean;
+  isFirst?: boolean;
   /** Optional cache used to skip unchanged files during folder publish. */
   cache?: PublishCacheService;
 }
@@ -38,6 +35,8 @@ export interface PublishResult {
 
 export class PublisherService {
   private readonly output: vscode.OutputChannel;
+  // CRM backend rejects concurrent PublishXml calls; serialize them with a queue.
+  private publishQueue: Promise<void> = Promise.resolve();
 
   constructor() {
     this.output = vscode.window.createOutputChannel("XRM Publisher");
@@ -51,8 +50,7 @@ export class PublisherService {
     options: PublishOptions = {},
   ): Promise<PublishResult> {
     const result: PublishResult = { created: 0, updated: 0, skipped: 0, failed: 0 };
-    const shouldLogHeader = options.logHeader ?? true;
-    const shouldLogAuth = options.logAuth ?? true;
+    const shouldLogHeader = options.isFirst ?? true;
     const started = new Date().toISOString();
     if (shouldLogHeader) {
       this.output.appendLine('-------------------------------');
@@ -72,13 +70,13 @@ export class PublisherService {
         content = await this.readFile(localPath);
         hash = this.hashContent(content);
         if (await options.cache.isUnchanged(remotePath, fileStat, hash)) {
-          this.output.appendLine(`  ↷ ${fmt.resource(remotePath)} unchanged (skipped)`);
+          this.output.appendLine(`  ↷ ${fmt.resource(remotePath)} has been skipped (unchanged)`);
           result.skipped = 1;
           return result;
         }
       }
 
-      const token = await this.resolveToken(env, auth, shouldLogAuth);
+      const token = await this.resolveToken(env, auth, shouldLogHeader);
       if (!token) {
         throw new Error(
           "No credentials available. Sign in interactively or set client credentials first.",
@@ -110,6 +108,7 @@ export class PublisherService {
           name: remotePath,
           type: webResourceType,
         });
+        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been updated`);
         result.updated = 1;
       } else {
         resourceId = await this.createWebResource(apiRoot, token, {
@@ -118,11 +117,12 @@ export class PublisherService {
           name: remotePath,
           type: webResourceType,
         });
+        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been created`);
         await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
         result.created = 1;
       }
 
-      await this.publishWebResource(apiRoot, token, resourceId);
+      await this.publishSerial(apiRoot, token, resourceId, remotePath);
       if (options.cache && hash) {
         await options.cache.update(remotePath, fileStat, hash);
       }
@@ -215,24 +215,27 @@ export class PublisherService {
       : normalizedBase;
   }
 
-  private async resolveToken(
+  async resolveToken(
     env: EnvironmentConfig,
     auth: PublishAuth,
     logAuth: boolean,
   ): Promise<string | undefined> {
-    if (auth.accessToken) {
-      if (logAuth) {
-        this.output.appendLine("  ↳ auth: interactive token");
-      }
-      return auth.accessToken;
-    }
-
     if (auth.credentials) {
       if (logAuth) {
         const tenant = auth.credentials.tenantId ? ` tenant=${auth.credentials.tenantId}` : "";
         this.output.appendLine(`  ↳ auth: clientId=${auth.credentials.clientId}${tenant}`);
       }
+      if (auth.accessToken) {
+        return auth.accessToken;
+      }
       return this.acquireTokenWithClientCredentials(env, auth.credentials);
+    }
+
+    if (auth.accessToken) {
+      if (logAuth) {
+        this.output.appendLine("  ↳ auth: interactive token");
+      }
+      return auth.accessToken;
     }
 
     return undefined;
@@ -339,7 +342,6 @@ export class PublisherService {
       throw await this.buildError("Failed to update web resource", response);
     }
 
-    this.output.appendLine("  ✓ updated");
     return id;
   }
 
@@ -380,7 +382,6 @@ export class PublisherService {
       throw new Error("Web resource created but no identifier returned.");
     }
 
-    this.output.appendLine("  ✓ created");
     return id;
   }
 
@@ -517,8 +518,22 @@ export class PublisherService {
     if (!response.ok) {
       throw await this.buildError("Failed to publish web resource", response);
     }
+  }
 
-    this.output.appendLine("  ✓ published");
+  private async publishSerial(
+    apiRoot: string,
+    token: string,
+    webResourceId: string,
+    remotePath: string,
+  ): Promise<void> {
+    const run = async () => {
+      await this.publishWebResource(apiRoot, token, webResourceId);
+      this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} published`);
+    };
+
+    const next = this.publishQueue.catch(() => undefined).then(run);
+    this.publishQueue = next.catch(() => undefined);
+    await next;
   }
 
   private async parseJsonIfAny(response: Response): Promise<unknown> {

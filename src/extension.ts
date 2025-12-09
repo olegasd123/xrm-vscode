@@ -11,6 +11,8 @@ import { StatusBarService } from "./services/statusBarService";
 import { LastSelectionService } from "./services/lastSelectionService";
 import { PublishCacheService } from "./services/publishCacheService";
 
+const FOLDER_PUBLISH_CONCURRENCY = 4;
+
 export async function activate(context: vscode.ExtensionContext) {
   const configuration = new ConfigurationService();
   const bindings = new BindingService(configuration);
@@ -438,29 +440,54 @@ async function publishFolder(
     return;
   }
 
+  let sharedAuth = { ...publishAuth.auth };
+  if (!sharedAuth.accessToken && sharedAuth.credentials) {
+    try {
+      const token = await publisher.resolveToken(
+        publishAuth.env,
+        sharedAuth,
+        false,
+      );
+      if (token) {
+        sharedAuth = { ...sharedAuth, accessToken: token };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`XRM publish failed: ${message}`);
+      return;
+    }
+  }
+
   files.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
   const totals = { created: 0, updated: 0, skipped: 0, failed: 0 };
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const isFirst = i === 0;
-    // Use most specific binding for this file (file binding > folder binding)
-    const fileBinding = await bindings.getBinding(file) ?? folderBinding;
-    const result = await publisher.publish(
-      fileBinding,
-      publishAuth.env,
-      publishAuth.auth,
-      file,
-      {
-        logHeader: isFirst,
-        logAuth: isFirst,
-        cache: publishCache,
-      },
-    );
-    totals.created += result.created;
-    totals.updated += result.updated;
-    totals.skipped += result.skipped;
-    totals.failed += result.failed;
-  }
+  let nextIndex = 0;
+  const poolSize = Math.min(FOLDER_PUBLISH_CONCURRENCY, files.length);
+  const workers = Array.from({ length: poolSize }, () =>
+    (async (): Promise<void> => {
+      while (nextIndex < files.length) {
+        const currentIndex = nextIndex++;
+        const file = files[currentIndex];
+        const isFirst = currentIndex === 0;
+        // Use most specific binding for this file (file binding > folder binding)
+        const fileBinding = (await bindings.getBinding(file)) ?? folderBinding;
+        const result = await publisher.publish(
+          fileBinding,
+          publishAuth.env,
+          sharedAuth,
+          file,
+          {
+            isFirst: isFirst,
+            cache: publishCache,
+          },
+        );
+        totals.created += result.created;
+        totals.updated += result.updated;
+        totals.skipped += result.skipped;
+        totals.failed += result.failed;
+      }
+    })(),
+  );
+  await Promise.all(workers);
   publisher.logSummary(totals, publishAuth.env.name);
   statusBar.setLastPublish({
     binding: folderBinding,

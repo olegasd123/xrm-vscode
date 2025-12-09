@@ -5,7 +5,6 @@
   - Support a “watch” mode to auto-publish on save for bound files, gated by a toggle.
 
 - **Speed & efficiency**
-  - Batch folder publishes with limited concurrency (e.g., pool of 3–5) and reuse a single auth token across all items.
   - Allow piping compiled assets: if the source is `.ts` or `.scss`, run the configured build task first and publish the generated output path.
   - Cache configuration/bindings in memory per session to avoid rereading JSON files on every command invocation.
   - Add a retry policy with exponential backoff for transient 429/5xx responses to reduce manual reruns.

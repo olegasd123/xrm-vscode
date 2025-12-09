@@ -100,3 +100,28 @@ test("resolveToken falls back to client credentials when interactive token missi
     logs.some((line: string) => line.includes("auth: clientId=id")),
   );
 });
+
+test("resolveToken reuses provided client credential token without re-acquiring", async () => {
+  const publisher = new PublisherService();
+  (publisher as any).acquireTokenWithClientCredentials = async () => {
+    throw new Error("should not request a new token");
+  };
+
+  const token = await (publisher as any).resolveToken(
+    { name: "dev", url: "https://example" },
+    {
+      accessToken: "cached-token",
+      credentials: {
+        clientId: "id",
+        clientSecret: "secret",
+      },
+    },
+    true,
+  );
+
+  assert.strictEqual(token, "cached-token");
+  const logs = (publisher as any).output.logs;
+  assert.ok(
+    logs.some((line: string) => line.includes("auth: clientId=id")),
+  );
+});
