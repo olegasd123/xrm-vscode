@@ -132,10 +132,10 @@ export class PublisherService {
         await options.cache.update(remotePath, fileStat, hash);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.describeError(error);
       this.output.appendLine(`  ✗ Publish failed: ${message}`);
       this.output.show(true);
-      vscode.window.showErrorMessage(`XRM publish failed: ${message}`);
+      await this.notifyError(message, error);
       result.failed = 1;
     }
     return result;
@@ -607,16 +607,70 @@ export class PublisherService {
     return body.access_token;
   }
 
+  private describeError(error: unknown): string {
+    const base = error instanceof Error ? error.message : String(error);
+    const code = (error as any)?.code as string | undefined;
+    const correlationId = (error as any)?.correlationId as string | undefined;
+    const extras: string[] = [];
+    if (code) extras.push(`code ${code}`);
+    if (correlationId) extras.push(`corr ${correlationId}`);
+    return extras.length ? `${base} (${extras.join(", ")})` : base;
+  }
+
+  private async notifyError(message: string, error?: unknown): Promise<void> {
+    const copyAction = "Copy error details";
+    const selection = await vscode.window.showErrorMessage(
+      `XRM publish failed: ${message}`,
+      copyAction,
+    );
+    if (selection !== copyAction) {
+      return;
+    }
+
+    const details = this.formatErrorDetails(error);
+    try {
+      await vscode.env.clipboard.writeText(details);
+      this.output.appendLine("  ↳ Error details copied to clipboard");
+    } catch {
+      // Clipboard failures should not crash publish flow.
+    }
+  }
+
+  private formatErrorDetails(error: unknown): string {
+    const base = error instanceof Error ? error.message : String(error);
+    const code = (error as any)?.code as string | undefined;
+    const correlationId = (error as any)?.correlationId as string | undefined;
+    const status = (error as any)?.status as number | undefined;
+    const rawBody = (error as any)?.rawBody as string | undefined;
+    const sections = [
+      `Message: ${base}`,
+      code ? `Code: ${code}` : undefined,
+      status ? `Status: ${status}` : undefined,
+      correlationId ? `CorrelationId: ${correlationId}` : undefined,
+      rawBody ? `Response: ${rawBody}` : undefined,
+    ].filter(Boolean);
+    return sections.join("\n");
+  }
+
   private async buildError(context: string, response: Response): Promise<Error> {
     const text = await response.text();
     let detail = text;
+    let code: string | undefined;
     try {
       const parsed = JSON.parse(text) as {
-        error?: { message?: string; description?: string };
+        error?: {
+          code?: string;
+          message?: string;
+          description?: string;
+          innererror?: { message?: string; type?: string; stacktrace?: string };
+        };
         Message?: string;
       };
+      code = parsed.error?.code;
       detail =
         parsed.error?.message ||
+        parsed.error?.description ||
+        parsed.error?.innererror?.message ||
         parsed.error?.description ||
         parsed.Message ||
         text;
@@ -624,6 +678,45 @@ export class PublisherService {
       // Ignore parse errors.
     }
 
-    return new Error(`${context}: ${detail} (${response.status})`);
+    const correlationId = this.extractCorrelationId(response);
+    const message =
+      code && detail !== code ? `${code}: ${detail}` : detail;
+
+    const error = new Error(`${context}: ${message} (${response.status})`) as Error & {
+      code?: string;
+      correlationId?: string;
+      rawBody?: string;
+      status?: number;
+    };
+    error.code = code;
+    error.correlationId = correlationId;
+    error.rawBody = text;
+    error.status = response.status;
+
+    return error;
+  }
+
+  private extractCorrelationId(response: Response): string | undefined {
+    const headers = response.headers;
+    const direct =
+      headers.get("x-ms-correlation-request-id") ||
+      headers.get("x-ms-request-id") ||
+      headers.get("request-id");
+    if (direct) {
+      return direct;
+    }
+
+    const diagnostics =
+      headers.get("x-ms-diagnostics") || headers.get("x-ms-ags-diagnostic");
+    if (!diagnostics) {
+      return undefined;
+    }
+
+    try {
+      const parsed = JSON.parse(diagnostics) as { ServerResponseId?: string };
+      return parsed.ServerResponseId;
+    } catch {
+      return undefined;
+    }
   }
 }

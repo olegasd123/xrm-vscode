@@ -226,3 +226,29 @@ test("publish aborts when remotePath matches multiple resources", async () => {
     await fs.rm(workspaceRoot, { recursive: true, force: true });
   }
 });
+
+test("buildError surfaces code and correlation id", async () => {
+  const publisher = new PublisherService();
+  const headers = new Headers({
+    "x-ms-correlation-request-id": "corr-123",
+    "x-ms-ags-diagnostic": '{"ServerResponseId":"diag-id"}',
+  });
+  const response = new Response(
+    JSON.stringify({
+      error: {
+        code: "0x80040217",
+        message: "Bad thing happened",
+      },
+    }),
+    { status: 400, headers },
+  );
+
+  const error = await (publisher as any).buildError(
+    "Failed to test",
+    response,
+  );
+
+  assert.strictEqual((error as any).code, "0x80040217");
+  assert.strictEqual((error as any).correlationId, "corr-123");
+  assert.match(error.message, /0x80040217: Bad thing happened/);
+});
