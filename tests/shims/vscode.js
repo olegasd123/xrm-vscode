@@ -74,6 +74,13 @@ const window = {
   },
   showInputBox: async () => undefined,
   showTextDocument: async () => undefined,
+  withProgress: async (_options, task) => {
+    const token = {
+      isCancellationRequested: false,
+      onCancellationRequested: () => ({ dispose: () => {} }),
+    };
+    return task({ report: () => {} }, token);
+  },
   createOutputChannel: () => {
     const lines = [];
     return {
@@ -113,6 +120,10 @@ const commands = {
   registerCommand: () => ({ dispose: () => {} }),
 };
 
+const ProgressLocation = {
+  Notification: 15,
+};
+
 module.exports = {
   Uri,
   workspace,
@@ -121,4 +132,5 @@ module.exports = {
   FileType,
   authentication,
   InMemorySecretStorage,
+  ProgressLocation,
 };

@@ -252,3 +252,47 @@ test("buildError surfaces code and correlation id", async () => {
   assert.strictEqual((error as any).correlationId, "corr-123");
   assert.match(error.message, /0x80040217: Bad thing happened/);
 });
+
+test("publish returns cancellation result when token is cancelled", async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  (vscode.workspace as any).workspaceFolders = [
+    { uri: vscode.Uri.file(workspaceRoot) },
+  ];
+  const file = path.join(workspaceRoot, "script.js");
+  await fs.writeFile(file, "console.log('hi');");
+
+  const token = {
+    isCancellationRequested: true,
+    onCancellationRequested: () => ({ dispose: () => {} }),
+  } as vscode.CancellationToken;
+
+  const originalFetch = global.fetch;
+  let fetchCalled = false;
+  global.fetch = (async () => {
+    fetchCalled = true;
+    return new Response(JSON.stringify({ value: [] }), { status: 200 });
+  }) as any;
+
+  try {
+    const publisher = new PublisherService();
+    const result = await publisher.publish(
+      {
+        relativeLocalPath: file,
+        remotePath: "new_/web/script.js",
+        solutionName: "CoreWebResources",
+        kind: "file",
+      },
+      { name: "dev", url: "https://example" },
+      { accessToken: "token" },
+      vscode.Uri.file(file),
+      { cancellationToken: token },
+    );
+
+    assert.strictEqual(result.cancelled, true);
+    assert.strictEqual(result.failed, 0);
+    assert.strictEqual(fetchCalled, false);
+  } finally {
+    global.fetch = originalFetch;
+    await fs.rm(workspaceRoot, { recursive: true, force: true });
+  }
+});

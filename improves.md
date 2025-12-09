@@ -11,7 +11,6 @@
 
 - **Reliability & UX safeguards**
   - Let users choose whether missing web resources should be created per publish invocation (override the env default).
-  - Add cancellation tokens to abort long-running folder publishes and surface partial results cleanly.
   - Support per-environment default solution overrides to avoid mispublishing to the global default.
 
 - **Codebase improvements**

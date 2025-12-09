@@ -24,6 +24,7 @@ export interface PublishOptions {
   isFirst?: boolean;
   /** Optional cache used to skip unchanged files during folder publish. */
   cache?: PublishCacheService;
+  cancellationToken?: vscode.CancellationToken;
 }
 
 export interface PublishResult {
@@ -31,6 +32,8 @@ export interface PublishResult {
   updated: number;
   skipped: number;
   failed: number;
+  /** True when publish exited early due to cancellation. */
+  cancelled?: boolean;
 }
 
 export class PublisherService {
@@ -50,10 +53,11 @@ export class PublisherService {
     options: PublishOptions = {},
   ): Promise<PublishResult> {
     const result: PublishResult = { created: 0, updated: 0, skipped: 0, failed: 0 };
+    const cancellationToken = options.cancellationToken;
     const shouldLogHeader = options.isFirst ?? true;
     const started = new Date().toISOString();
     if (shouldLogHeader) {
-      this.output.appendLine('-------------------------------');
+      this.output.appendLine('────────────────────────────────────────────────────────────────────');
       this.output.appendLine(
         `[${started}] Publishing ${fmt.remote(binding.remotePath)} → ${fmt.env(env.name)} ${fmt.url(env.url)}`,
       );
@@ -61,6 +65,7 @@ export class PublisherService {
     }
 
     try {
+      this.throwIfCancelled(cancellationToken);
       const { localPath, remotePath } = await this.resolvePaths(binding, targetUri);
       const fileStat = await vscode.workspace.fs.stat(vscode.Uri.file(localPath));
       let content: Buffer | undefined;
@@ -76,6 +81,7 @@ export class PublisherService {
         }
       }
 
+      this.throwIfCancelled(cancellationToken);
       const token = await this.resolveToken(env, auth, shouldLogHeader);
       if (!token) {
         throw new Error(
@@ -84,6 +90,7 @@ export class PublisherService {
       }
 
       const apiRoot = this.apiRoot(env.url);
+      this.throwIfCancelled(cancellationToken);
       const { existingId, solutionId } = await this.preflight(
         apiRoot,
         token,
@@ -127,11 +134,17 @@ export class PublisherService {
         result.created = 1;
       }
 
-      await this.publishSerial(apiRoot, token, resourceId, remotePath);
+      await this.publishSerial(apiRoot, token, resourceId, remotePath, cancellationToken);
       if (options.cache && hash) {
         await options.cache.update(remotePath, fileStat, hash);
       }
     } catch (error) {
+      if (this.isCancellationError(error)) {
+        result.cancelled = true;
+        result.skipped = 1;
+        this.output.appendLine(`  ↷ Publish cancelled`);
+        return result;
+      }
       const message = this.describeError(error);
       this.output.appendLine(`  ✗ Publish failed: ${message}`);
       this.output.show(true);
@@ -141,7 +154,7 @@ export class PublisherService {
     return result;
   }
 
-  logSummary(result: PublishResult, envName?: string): void {
+  logSummary(result: PublishResult, envName?: string, cancelled = false): void {
     const parts: string[] = [];
     if (result.created) parts.push(`${result.created} created`);
     if (result.updated) parts.push(`${result.updated} updated`);
@@ -149,12 +162,15 @@ export class PublisherService {
     if (result.failed) parts.push(`${result.failed} failed`);
     if (parts.length) {
       this.output.appendLine(`  ─────`);
+      if (cancelled) {
+        this.output.appendLine("  ⚠ Publish cancelled; partial results only.");
+      }
       this.output.appendLine(`  Total: ${parts.join(", ")}`);
       if (envName) {
         const summary = parts.join(", ");
-        if (result.failed) {
+        if (result.failed || cancelled) {
           vscode.window.showWarningMessage(
-            `XRM publish to ${envName}: ${summary} (check output for errors)`,
+            `XRM publish to ${envName}: ${cancelled ? "cancelled, " : ""}${summary} (check output for errors)`,
           );
         } else {
           vscode.window.showInformationMessage(
@@ -533,7 +549,9 @@ export class PublisherService {
     apiRoot: string,
     token: string,
     webResourceId: string,
+    cancellationToken?: vscode.CancellationToken,
   ): Promise<void> {
+    this.throwIfCancelled(cancellationToken);
     const url = `${apiRoot}/PublishXml`;
     const parameterXml = `<importexportxml><webresources><webresource>${webResourceId}</webresource></webresources></importexportxml>`;
     const response = await fetch(url, {
@@ -556,9 +574,11 @@ export class PublisherService {
     token: string,
     webResourceId: string,
     remotePath: string,
+    cancellationToken?: vscode.CancellationToken,
   ): Promise<void> {
     const run = async () => {
-      await this.publishWebResource(apiRoot, token, webResourceId);
+      this.throwIfCancelled(cancellationToken);
+      await this.publishWebResource(apiRoot, token, webResourceId, cancellationToken);
       this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been published`);
     };
 
@@ -605,6 +625,22 @@ export class PublisherService {
     }
 
     return body.access_token;
+  }
+
+  private throwIfCancelled(token?: vscode.CancellationToken): void {
+    if (this.isCancelled(token)) {
+      const error = new Error("Publish cancelled");
+      (error as any).cancelled = true;
+      throw error;
+    }
+  }
+
+  private isCancelled(token?: vscode.CancellationToken): boolean {
+    return token?.isCancellationRequested ?? false;
+  }
+
+  private isCancellationError(error: unknown): boolean {
+    return Boolean((error as any)?.cancelled);
   }
 
   private describeError(error: unknown): string {

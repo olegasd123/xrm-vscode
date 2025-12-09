@@ -156,6 +156,7 @@ async function publishLastResource(
     auth,
     statusBar,
     lastSelection,
+    publishCache,
     config,
     preferredEnvName,
   );
@@ -221,6 +222,7 @@ async function openResourceMenu(
     auth,
     statusBar,
     lastSelection,
+    publishCache,
     config,
   );
 }
@@ -292,6 +294,7 @@ async function publishResource(
     auth,
     statusBar,
     lastSelection,
+    publishCache,
     config,
   );
 }
@@ -379,6 +382,7 @@ async function publishFlow(
   auth: AuthService,
   statusBar: StatusBarService,
   lastSelection: LastSelectionService,
+  publishCache: PublishCacheService,
   config?: XrmConfiguration,
   preferredEnvName?: string,
 ) {
@@ -395,7 +399,9 @@ async function publishFlow(
     return;
   }
 
-  const result = await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri);
+  const result = await publisher.publish(binding, publishAuth.env, publishAuth.auth, targetUri, {
+    cache: publishCache,
+  });
   publisher.logSummary(result, publishAuth.env.name);
   statusBar.setLastPublish({
     binding,
@@ -458,43 +464,76 @@ async function publishFolder(
     }
   }
 
-  files.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
-  const totals = { created: 0, updated: 0, skipped: 0, failed: 0 };
-  let nextIndex = 0;
-  const poolSize = Math.min(FOLDER_PUBLISH_CONCURRENCY, files.length);
-  const workers = Array.from({ length: poolSize }, () =>
-    (async (): Promise<void> => {
-      while (nextIndex < files.length) {
-        const currentIndex = nextIndex++;
-        const file = files[currentIndex];
-        const isFirst = currentIndex === 0;
-        // Use most specific binding for this file (file binding > folder binding)
-        const fileBinding = (await bindings.getBinding(file)) ?? folderBinding;
-        const result = await publisher.publish(
-          fileBinding,
-          publishAuth.env,
-          sharedAuth,
-          file,
-          {
-            isFirst: isFirst,
-            cache: publishCache,
-          },
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Publishing to ${publishAuth.env.name}…`,
+      cancellable: true,
+    },
+    async (_progress, cancellationToken) => {
+      files.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+      const totals = { created: 0, updated: 0, skipped: 0, failed: 0 };
+      let nextIndex = 0;
+      let cancelled = false;
+      const poolSize = Math.min(FOLDER_PUBLISH_CONCURRENCY, files.length);
+      const workers = Array.from({ length: poolSize }, () =>
+        (async (): Promise<void> => {
+          while (true) {
+            if (cancellationToken.isCancellationRequested || cancelled) {
+              cancelled = true;
+              break;
+            }
+            const currentIndex = nextIndex++;
+            if (currentIndex >= files.length) {
+              break;
+            }
+            const file = files[currentIndex];
+            const isFirst = currentIndex === 0;
+            // Use most specific binding for this file (file binding > folder binding)
+            const fileBinding = (await bindings.getBinding(file)) ?? folderBinding;
+            const result = await publisher.publish(
+              fileBinding,
+              publishAuth.env,
+              sharedAuth,
+              file,
+              {
+                isFirst: isFirst,
+                cache: publishCache,
+                cancellationToken,
+              },
+            );
+            totals.created += result.created;
+            totals.updated += result.updated;
+            totals.skipped += result.skipped;
+            totals.failed += result.failed;
+            if (result.cancelled || cancellationToken.isCancellationRequested) {
+              cancelled = true;
+              break;
+            }
+          }
+        })(),
+      );
+      await Promise.all(workers);
+      publisher.logSummary(totals, publishAuth.env.name, cancelled);
+      if (!cancelled) {
+        statusBar.setLastPublish({
+          binding: folderBinding,
+          environment: publishAuth.env,
+          targetUri: folderUri,
+          isFolder: true,
+        });
+      } else {
+        const processed =
+          totals.created + totals.updated + totals.skipped + totals.failed;
+        const summary = processed
+          ? `${processed} file(s) processed before cancellation`
+          : "No files were processed";
+        vscode.window.showWarningMessage(
+          `XRM publish to ${publishAuth.env.name} cancelled: ${summary}.`,
         );
-        totals.created += result.created;
-        totals.updated += result.updated;
-        totals.skipped += result.skipped;
-        totals.failed += result.failed;
       }
-    })(),
+    },
   );
-  await Promise.all(workers);
-  publisher.logSummary(totals, publishAuth.env.name);
-  statusBar.setLastPublish({
-    binding: folderBinding,
-    environment: publishAuth.env,
-    targetUri: folderUri,
-    isFolder: true,
-  });
 }
 
 async function editConfiguration(
@@ -639,12 +678,12 @@ async function pickEnvironmentAndAuth(
   preferredEnvName?: string,
 ): Promise<
   | {
-      env: XrmConfiguration["environments"][number];
-      auth: {
-        accessToken?: string;
-        credentials?: Awaited<ReturnType<SecretService["getCredentials"]>>;
-      };
-    }
+    env: XrmConfiguration["environments"][number];
+    auth: {
+      accessToken?: string;
+      credentials?: Awaited<ReturnType<SecretService["getCredentials"]>>;
+    };
+  }
   | undefined
 > {
   const resolvedConfig = config ?? (await configuration.loadConfiguration());
@@ -749,4 +788,4 @@ function buildSupportedSet(config: XrmConfiguration): Set<string> {
   return new Set(extensions.map((ext) => ext.toLowerCase()));
 }
 
-export function deactivate() {}
+export function deactivate() { }
