@@ -108,7 +108,7 @@ export class PublisherService {
           name: remotePath,
           type: webResourceType,
         });
-        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been updated`);
+        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been updated, publishing...`);
         result.updated = 1;
       } else {
         resourceId = await this.createWebResource(apiRoot, token, {
@@ -117,7 +117,7 @@ export class PublisherService {
           name: remotePath,
           type: webResourceType,
         });
-        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been created`);
+        this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been created, publishing...`);
         await this.addToSolution(apiRoot, token, resourceId, binding.solutionName);
         result.created = 1;
       }
@@ -528,7 +528,7 @@ export class PublisherService {
   ): Promise<void> {
     const run = async () => {
       await this.publishWebResource(apiRoot, token, webResourceId);
-      this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} published`);
+      this.output.appendLine(`  ✓ ${fmt.resource(remotePath)} has been published`);
     };
 
     const next = this.publishQueue.catch(() => undefined).then(run);
