@@ -66,3 +66,33 @@ test("getRelativeToWorkspace returns input when no workspace is open", () => {
   const absolutePath = path.join(os.tmpdir(), "noop.txt");
   assert.strictEqual(service.getRelativeToWorkspace(absolutePath), absolutePath);
 });
+
+test("loadConfiguration normalizes legacy solutionName property", async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-config-"));
+  (vscode.workspace as any).workspaceFolders = [
+    { uri: vscode.Uri.file(workspaceRoot) },
+  ];
+  const service = new ConfigurationService();
+  const config = {
+    environments: [
+      { name: "dev", url: "https://example" },
+    ],
+    solutions: [
+      { solutionName: "LegacySolution", prefix: "new_" },
+    ],
+  };
+
+  const configUri = vscode.Uri.joinPath(
+    vscode.Uri.file(workspaceRoot),
+    ".vscode",
+    "xrm.config.json",
+  );
+  await vscode.workspace.fs.writeFile(
+    configUri,
+    Buffer.from(JSON.stringify(config, null, 2)),
+  );
+
+  const loaded = await service.loadConfiguration();
+  assert.strictEqual(loaded.solutions[0].name, "LegacySolution");
+  await fs.rm(workspaceRoot, { recursive: true, force: true });
+});

@@ -132,5 +132,8 @@
     "@types/node": "^20.10.2",
     "@types/vscode": "^1.84.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
   }
 }

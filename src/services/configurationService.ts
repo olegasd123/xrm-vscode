@@ -1,10 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-  BindingSnapshot,
-  XrmConfiguration,
-  BindingEntry,
-} from "../types";
+import { BindingSnapshot, XrmConfiguration, BindingEntry } from "../types";
+import { configurationSchema, bindingsSchema } from "./schemas";
 
 export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [
   ".js",
@@ -83,36 +80,13 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    const parsed = JSON.parse(content.toString()) as XrmConfiguration & {
-      solutions?: Array<{ name?: string; solutionName?: string }>;
-    };
+    const parsed = configurationSchema.parse(this.parseJson(content, "xrm.config.json"));
 
-    if (parsed.solutions) {
-      parsed.solutions = parsed.solutions.map((solution) => {
-        if (!solution.name && (solution as any).solutionName) {
-          return { ...solution, name: (solution as any).solutionName };
-        }
-        return solution as any;
-      });
-    }
-
-    const normalized: XrmConfiguration = {
+    return {
+      ...parsed,
       webResourceSupportedExtensions:
         parsed.webResourceSupportedExtensions ?? WEB_RESOURCE_SUPPORTED_EXTENSIONS,
-      ...parsed,
     };
-
-    if (normalized.environments) {
-      normalized.environments = normalized.environments.map((env) => ({
-        createMissingWebResources:
-          env.createMissingWebResources === undefined
-            ? false
-            : env.createMissingWebResources,
-        ...env,
-      }));
-    }
-
-    return normalized;
   }
 
   async saveConfiguration(config: XrmConfiguration): Promise<void> {
@@ -134,7 +108,7 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    return JSON.parse(content.toString()) as BindingSnapshot;
+    return bindingsSchema.parse(this.parseJson(content, "xrm.bindings.json"));
   }
 
   async saveBindings(snapshot: BindingSnapshot): Promise<void> {
@@ -233,6 +207,16 @@ export class ConfigurationService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  private parseJson(content: Uint8Array, filename: string): unknown {
+    try {
+      return JSON.parse(content.toString());
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`${filename} contains invalid JSON: ${message}`);
     }
   }
 }

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { ConfigurationService } from "./configurationService";
+import { publishCacheSchema } from "./schemas";
 
 interface PublishCacheEntry {
   mtime: number;
@@ -77,12 +78,15 @@ export class PublishCacheService {
     try {
       await this.ensureVscodeFolder(cacheUri);
       const content = await vscode.workspace.fs.readFile(cacheUri);
-      this.cache = JSON.parse(content.toString()) as Record<
-        string,
-        PublishCacheEntry
-      >;
-    } catch {
+      this.cache = publishCacheSchema.parse(
+        this.parseJson(content, "xrm.publishCache.json"),
+      ) as Record<string, PublishCacheEntry>;
+    } catch (error) {
       this.cache = {};
+      if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`Failed to read publish cache: ${message}`);
+      }
     }
 
     return true;
@@ -115,6 +119,16 @@ export class PublishCacheService {
       await vscode.workspace.fs.stat(vscodeDir);
     } catch {
       await vscode.workspace.fs.createDirectory(vscodeDir);
+    }
+  }
+
+  private parseJson(content: Uint8Array, filename: string): unknown {
+    try {
+      return JSON.parse(content.toString());
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`${filename} contains invalid JSON: ${message}`);
     }
   }
 }
