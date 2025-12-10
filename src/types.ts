@@ -24,7 +24,6 @@ export interface XrmConfiguration {
   environments: EnvironmentConfig[];
   solutions: SolutionConfig[];
   /** Supported web resource file extensions (lowercase, dot-prefixed) */
-  webResourceSupportedExtensions?: string[];
 }
 
 export interface BindingEntry {

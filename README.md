@@ -31,8 +31,7 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`). Ex
       "name": "dev",
       "url": "https://your-dev.crm.dynamics.com",
       "authType": "interactive",
-      "createMissingWebResources": true,
-      "userAgentEnabled": true
+      "createMissingWebResources": true
     },
     {
       "name": "prod",
@@ -40,29 +39,13 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`). Ex
       "authType": "clientSecret",
       "resource": "https://your-prod.crm.dynamics.com",
       "createMissingWebResources": false,
-      "userAgent": "XRM-VSCode/prod"
+      "userAgentEnabled": true,
+      "userAgent": "XRM-VSCode"
     }
   ],
   "solutions": [
     { "name": "CoreWebResources", "prefix": "cwr_" },
     { "name": "ComponentWebResources", "prefix": "cmp_" }
-  ],
-  "webResourceSupportedExtensions": [
-    ".js",
-    ".css",
-    ".htm",
-    ".html",
-    ".xml",
-    ".json",
-    ".resx",
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".xsl",
-    ".xslt",
-    ".ico",
-    ".svg"
   ]
 }
 ```
@@ -110,4 +93,4 @@ File bindings win over folder bindings when both cover the same file.
 - Quick publish: click the status bar item (cloud upload) or run `XRM: Publish Last Resource` to republish the most recent file or folder with the same environment and binding.
 
 ### Supported file types
-By default: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. Adjust the list with `webResourceSupportedExtensions` in `xrm.config.json`; the Explorer `XRM` menu is always visible, but actions only run for extensions included in this list.
+Supported: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. The Explorer `XRM` menu is visible on those types or folder.

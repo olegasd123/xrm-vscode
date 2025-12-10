@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-  ConfigurationService,
-  WEB_RESOURCE_SUPPORTED_EXTENSIONS,
-} from "./services/configurationService";
+import { ConfigurationService, WEB_RESOURCE_SUPPORTED_EXTENSIONS } from "./services/configurationService";
 import { BindingService } from "./services/bindingService";
 import { UiService } from "./services/uiService";
 import { PublisherService } from "./services/publisherService";
@@ -111,7 +108,7 @@ async function publishLastResource(
   }
 
   const config = await configuration.loadConfiguration();
-  const supportedExtensions = buildSupportedSet(config);
+  const supportedExtensions = buildSupportedSet();
   const binding = (await bindings.getBinding(last.targetUri)) ?? last.binding;
   const preferredEnvName = last.environment.name;
 
@@ -169,7 +166,7 @@ async function openResourceMenu(
   }
 
   const config = await configuration.loadConfiguration();
-  const supportedExtensions = buildSupportedSet(config);
+  const supportedExtensions = buildSupportedSet();
 
   if (!(await ensureSupportedResource(targetUri, supportedExtensions))) {
     return;
@@ -234,7 +231,7 @@ async function publishResource(
   }
 
   const config = await configuration.loadConfiguration();
-  const supportedExtensions = buildSupportedSet(config);
+  const supportedExtensions = buildSupportedSet();
 
   if (!(await ensureSupportedResource(targetUri, supportedExtensions))) {
     return;
@@ -691,12 +688,8 @@ async function collectSupportedFiles(
   return files;
 }
 
-function buildSupportedSet(config: XrmConfiguration): Set<string> {
-  const extensions =
-    config.webResourceSupportedExtensions && config.webResourceSupportedExtensions.length
-      ? config.webResourceSupportedExtensions
-      : WEB_RESOURCE_SUPPORTED_EXTENSIONS;
-  return new Set(extensions.map((ext) => ext.toLowerCase()));
+function buildSupportedSet(): Set<string> {
+  return new Set(WEB_RESOURCE_SUPPORTED_EXTENSIONS.map((ext) => ext.toLowerCase()));
 }
 
 export function deactivate() {}

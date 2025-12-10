@@ -70,20 +70,13 @@ export class ConfigurationService {
             prefix: "cmp_",
           },
         ],
-        webResourceSupportedExtensions: WEB_RESOURCE_SUPPORTED_EXTENSIONS,
       };
       await this.saveConfiguration(defaults);
       return defaults;
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    const parsed = configurationSchema.parse(this.parseJson(content, "xrm.config.json"));
-
-    return {
-      ...parsed,
-      webResourceSupportedExtensions:
-        parsed.webResourceSupportedExtensions ?? WEB_RESOURCE_SUPPORTED_EXTENSIONS,
-    };
+    return configurationSchema.parse(this.parseJson(content, "xrm.config.json"));
   }
 
   async saveConfiguration(config: XrmConfiguration): Promise<void> {

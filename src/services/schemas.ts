@@ -40,7 +40,6 @@ export const solutionSchema = solutionSchemaBase
 export const configurationSchema = z.object({
   environments: z.array(environmentSchema),
   solutions: z.array(solutionSchema),
-  webResourceSupportedExtensions: z.array(z.string()).optional(),
 });
 
 export const bindingEntrySchema = z.object({
