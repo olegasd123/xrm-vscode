@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { ConfigurationService, WEB_RESOURCE_SUPPORTED_EXTENSIONS } from "./services/configurationService";
+import {
+  ConfigurationService,
+  WEB_RESOURCE_SUPPORTED_EXTENSIONS,
+} from "./services/configurationService";
 import { BindingService } from "./services/bindingService";
 import { UiService } from "./services/uiService";
 import { PublisherService } from "./services/publisherService";

@@ -204,7 +204,9 @@ export class PublisherService {
             `Dynamics 365 Tools publish to ${envName}: ${cancelled ? "cancelled, " : ""}${summary} (check output for errors)`,
           );
         } else {
-          vscode.window.showInformationMessage(`Dynamics 365 Tools publish to ${envName}: ${summary}`);
+          vscode.window.showInformationMessage(
+            `Dynamics 365 Tools publish to ${envName}: ${summary}`,
+          );
         }
       }
     }

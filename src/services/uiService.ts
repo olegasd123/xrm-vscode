@@ -38,9 +38,7 @@ export class UiService {
     });
   }
 
-  async promptSolution(
-    solutions: SolutionConfig[],
-  ): Promise<SolutionConfig | undefined> {
+  async promptSolution(solutions: SolutionConfig[]): Promise<SolutionConfig | undefined> {
     if (!solutions.length) {
       const entered = await vscode.window.showInputBox({
         prompt: "Enter solution unique name",
