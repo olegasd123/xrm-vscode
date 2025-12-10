@@ -3,7 +3,24 @@
   "displayName": "Dynamics 365 Tools",
   "description": "Publish Dynamics 365 web resources directly from VS Code with environment-aware bindings.",
   "version": "0.0.1",
-  "publisher": "your-name",
+  "publisher": "dynamics365tools",
+  "icon": "assets/icon.png",
+  "license": "MIT",
+  "keywords": [
+    "dynamics 365",
+    "crm",
+    "power apps",
+    "web resources",
+    "publishing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/olegasd123/xrm-vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/olegasd123/xrm-vscode/issues"
+  },
+  "homepage": "https://github.com/olegasd123/xrm-vscode#readme",
   "engines": {
     "vscode": "^1.84.0"
   },

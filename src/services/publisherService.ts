@@ -845,7 +845,7 @@ export class PublisherService {
     if (env.userAgent?.trim()) {
       return env.userAgent.trim();
     }
-    const extension = vscode.extensions.getExtension("your-name.dynamics-365-tools");
+    const extension = vscode.extensions.getExtension("dynamics365tools.dynamics-365-tools");
     const version = (extension?.packageJSON as { version?: string })?.version || "dev";
     return `Dynamics365Tools-VSCode/${version}`;
   }
