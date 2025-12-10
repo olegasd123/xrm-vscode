@@ -3,6 +3,10 @@ export interface EnvironmentConfig {
   url: string;
   /** Optional resource/audience to request tokens for; defaults to url */
   resource?: string;
+  /** Optional user agent to send with HTTP requests */
+  userAgent?: string;
+  /** Opt-in flag to include user agent in HTTP requests */
+  userAgentEnabled?: boolean;
   /** Preferred auth type; defaults to interactive */
   authType?: "interactive" | "clientSecret";
   /** If false, publishing will fail instead of creating missing web resources */
@@ -14,16 +18,12 @@ export interface SolutionConfig {
   name: string;
   /** Publisher prefix used for web resource paths, e.g. new_ */
   prefix: string;
-  default?: boolean;
 }
 
-export interface XrmConfiguration {
+export interface Dynamics365Configuration {
   environments: EnvironmentConfig[];
   solutions: SolutionConfig[];
-  /** Default solution name (unique name) */
-  defaultSolution?: string;
   /** Supported web resource file extensions (lowercase, dot-prefixed) */
-  webResourceSupportedExtensions?: string[];
 }
 
 export interface BindingEntry {
@@ -44,3 +44,6 @@ export interface BindingSnapshot {
 export interface PublishContext {
   credentialsMissing: boolean;
 }
+
+// Use for any secret values that might flow into telemetry to ensure masking.
+export type MaskedString = string & { __masked: true };

@@ -7,10 +7,8 @@ import * as vscode from "vscode";
 import { ConfigurationService } from "../services/configurationService";
 
 test("createBinding stores workspace-relative path when inside workspace", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-config-"));
-  (vscode.workspace as any).workspaceFolders = [
-    { uri: vscode.Uri.file(workspaceRoot) },
-  ];
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-config-"));
+  (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const service = new ConfigurationService();
 
   const inputPath = path.join(workspaceRoot, "web", "script.js");
@@ -27,10 +25,8 @@ test("createBinding stores workspace-relative path when inside workspace", async
 });
 
 test("createBinding keeps absolute path outside workspace untouched", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-config-"));
-  (vscode.workspace as any).workspaceFolders = [
-    { uri: vscode.Uri.file(workspaceRoot) },
-  ];
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-config-"));
+  (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const service = new ConfigurationService();
 
   const outsidePath = path.join(os.tmpdir(), "external", "file.js");
@@ -46,11 +42,9 @@ test("createBinding keeps absolute path outside workspace untouched", async () =
 });
 
 test("resolveLocalPath handles workspace-namespaced relative paths", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-config-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-config-"));
   const workspaceName = path.basename(workspaceRoot);
-  (vscode.workspace as any).workspaceFolders = [
-    { uri: vscode.Uri.file(workspaceRoot) },
-  ];
+  (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const service = new ConfigurationService();
 
   const boundPath = path.join(workspaceName, "folder", "file.css");
@@ -65,4 +59,25 @@ test("getRelativeToWorkspace returns input when no workspace is open", () => {
 
   const absolutePath = path.join(os.tmpdir(), "noop.txt");
   assert.strictEqual(service.getRelativeToWorkspace(absolutePath), absolutePath);
+});
+
+test("loadConfiguration normalizes legacy solutionName property", async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-config-"));
+  (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
+  const service = new ConfigurationService();
+  const config = {
+    environments: [{ name: "dev", url: "https://example" }],
+    solutions: [{ solutionName: "LegacySolution", prefix: "new_" }],
+  };
+
+  const configUri = vscode.Uri.joinPath(
+    vscode.Uri.file(workspaceRoot),
+    ".vscode",
+    "dynamics365tools.config.json",
+  );
+  await vscode.workspace.fs.writeFile(configUri, Buffer.from(JSON.stringify(config, null, 2)));
+
+  const loaded = await service.loadConfiguration();
+  assert.strictEqual(loaded.solutions[0].name, "LegacySolution");
+  await fs.rm(workspaceRoot, { recursive: true, force: true });
 });

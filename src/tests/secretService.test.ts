@@ -25,7 +25,7 @@ test("getCredentials returns undefined when stored value is invalid JSON", async
   const secrets = new (vscode as any).InMemorySecretStorage();
   const service = new SecretService(secrets);
 
-  await secrets.store("xrm.env.dev.credentials", "{not json");
+  await secrets.store("dynamics365tools.env.dev.credentials", "{not json");
 
   const creds = await service.getCredentials("dev");
   assert.strictEqual(creds, undefined);

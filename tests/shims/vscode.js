@@ -74,6 +74,13 @@ const window = {
   },
   showInputBox: async () => undefined,
   showTextDocument: async () => undefined,
+  withProgress: async (_options, task) => {
+    const token = {
+      isCancellationRequested: false,
+      onCancellationRequested: () => ({ dispose: () => {} }),
+    };
+    return task({ report: () => {} }, token);
+  },
   createOutputChannel: () => {
     const lines = [];
     return {
@@ -82,7 +89,19 @@ const window = {
       logs: lines,
     };
   },
+  createStatusBarItem: () => ({
+    text: "",
+    tooltip: "",
+    command: undefined,
+    show: () => {},
+    hide: () => {},
+    dispose: () => {},
+  }),
   __messages: messages,
+};
+
+const extensions = {
+  getExtension: () => undefined,
 };
 
 class InMemorySecretStorage {
@@ -113,12 +132,24 @@ const commands = {
   registerCommand: () => ({ dispose: () => {} }),
 };
 
+const ProgressLocation = {
+  Notification: 15,
+};
+
+const StatusBarAlignment = {
+  Left: 1,
+  Right: 2,
+};
+
 module.exports = {
   Uri,
   workspace,
   window,
+  extensions,
   commands,
   FileType,
   authentication,
   InMemorySecretStorage,
+  ProgressLocation,
+  StatusBarAlignment,
 };

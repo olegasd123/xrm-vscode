@@ -1,13 +1,28 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-  BindingSnapshot,
-  XrmConfiguration,
-  BindingEntry,
-} from "../types";
+import { BindingSnapshot, Dynamics365Configuration, BindingEntry } from "../types";
+import { configurationSchema, bindingsSchema } from "./schemas";
 
-const CONFIG_FILENAME = "xrm.config.json";
-const BINDINGS_FILENAME = "xrm.bindings.json";
+export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [
+  ".js",
+  ".css",
+  ".htm",
+  ".html",
+  ".xml",
+  ".json",
+  ".resx",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".xsl",
+  ".xslt",
+  ".ico",
+  ".svg",
+];
+
+const CONFIG_FILENAME = "dynamics365tools.config.json";
+const BINDINGS_FILENAME = "dynamics365tools.bindings.json";
 
 export class ConfigurationService {
   private readonly workspaceFolder: vscode.WorkspaceFolder | undefined;
@@ -20,60 +35,40 @@ export class ConfigurationService {
     return this.workspaceFolder?.uri.fsPath;
   }
 
-  async loadConfiguration(): Promise<XrmConfiguration> {
+  async loadConfiguration(): Promise<Dynamics365Configuration> {
     const uri = this.getConfigUri();
     const exists = await this.exists(uri);
     if (!exists) {
-      const defaults: XrmConfiguration = {
+      const defaults: Dynamics365Configuration = {
         environments: [
           {
             name: "dev",
             url: "https://your-dev.crm.dynamics.com",
             authType: "interactive",
-            createMissingWebResources: false
+            createMissingWebResources: false,
           },
           {
             name: "test",
             url: "https://your-test.crm.dynamics.com",
             authType: "interactive",
-            createMissingWebResources: false
+            createMissingWebResources: false,
           },
           {
             name: "prod",
             url: "https://your-prod.crm.dynamics.com",
             authType: "interactive",
-            createMissingWebResources: false
+            createMissingWebResources: false,
           },
         ],
         solutions: [
           {
             name: "CoreWebResources",
             prefix: "new_",
-            default: true,
           },
           {
             name: "ComponentWebResources",
             prefix: "cmp_",
           },
-        ],
-        defaultSolution: "CoreWebResources",
-        webResourceSupportedExtensions: [
-          ".js",
-          ".css",
-          ".htm",
-          ".html",
-          ".xml",
-          ".json",
-          ".resx",
-          ".png",
-          ".jpg",
-          ".jpeg",
-          ".gif",
-          ".xap",
-          ".xsl",
-          ".xslt",
-          ".ico",
-          ".svg",
         ],
       };
       await this.saveConfiguration(defaults);
@@ -81,63 +76,13 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    const parsed = JSON.parse(content.toString()) as XrmConfiguration & {
-      solutions?: Array<{ name?: string; solutionName?: string }>;
-    };
-
-    if (parsed.solutions) {
-      parsed.solutions = parsed.solutions.map((solution) => {
-        if (!solution.name && (solution as any).solutionName) {
-          return { ...solution, name: (solution as any).solutionName };
-        }
-        return solution as any;
-      });
-    }
-
-    const normalized: XrmConfiguration = {
-      webResourceSupportedExtensions:
-        parsed.webResourceSupportedExtensions ?? [
-          ".js",
-          ".ts",
-          ".css",
-          ".htm",
-          ".html",
-          ".xml",
-          ".json",
-          ".resx",
-          ".png",
-          ".jpg",
-          ".jpeg",
-          ".gif",
-          ".xap",
-          ".xsl",
-          ".xslt",
-          ".ico",
-          ".svg",
-        ],
-      ...parsed,
-    };
-
-    if (normalized.environments) {
-      normalized.environments = normalized.environments.map((env) => ({
-        createMissingWebResources:
-          env.createMissingWebResources === undefined
-            ? false
-            : env.createMissingWebResources,
-        ...env,
-      }));
-    }
-
-    return normalized;
+    return configurationSchema.parse(this.parseJson(content, "dynamics365tools.config.json"));
   }
 
-  async saveConfiguration(config: XrmConfiguration): Promise<void> {
+  async saveConfiguration(config: Dynamics365Configuration): Promise<void> {
     const uri = this.getConfigUri();
     await this.ensureVscodeFolder();
-    await vscode.workspace.fs.writeFile(
-      uri,
-      Buffer.from(JSON.stringify(config, null, 2), "utf8"),
-    );
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(config, null, 2), "utf8"));
   }
 
   async loadBindings(): Promise<BindingSnapshot> {
@@ -150,7 +95,7 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    return JSON.parse(content.toString()) as BindingSnapshot;
+    return bindingsSchema.parse(this.parseJson(content, "dynamics365tools.bindings.json"));
   }
 
   async saveBindings(snapshot: BindingSnapshot): Promise<void> {
@@ -224,11 +169,7 @@ export class ConfigurationService {
       throw new Error("This extension requires an opened workspace folder.");
     }
 
-    return vscode.Uri.joinPath(
-      this.workspaceFolder.uri,
-      ".vscode",
-      filename,
-    );
+    return vscode.Uri.joinPath(this.workspaceFolder.uri, ".vscode", filename);
   }
 
   private async ensureVscodeFolder(): Promise<void> {
@@ -249,6 +190,15 @@ export class ConfigurationService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  private parseJson(content: Uint8Array, filename: string): unknown {
+    try {
+      return JSON.parse(content.toString());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${filename} contains invalid JSON: ${message}`);
     }
   }
 }

@@ -35,7 +35,7 @@ class FakeConfigurationService {
 }
 
 test("getBinding prefers the most specific match", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-bindings-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-bindings-"));
   const filePath = path.join(workspaceRoot, "web", "script.js");
 
   const snapshot: BindingSnapshot = {
@@ -65,7 +65,7 @@ test("getBinding prefers the most specific match", async () => {
 });
 
 test("folder bindings match nested files", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-bindings-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-bindings-"));
   const snapshot: BindingSnapshot = {
     bindings: [
       {
@@ -90,7 +90,7 @@ test("folder bindings match nested files", async () => {
 });
 
 test("addOrUpdateBinding replaces existing entry by path", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-bindings-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-bindings-"));
   const filePath = path.join(workspaceRoot, "scripts", "app.js");
 
   const snapshot: BindingSnapshot = {

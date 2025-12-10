@@ -30,6 +30,6 @@ export class SecretService {
   }
 
   private buildKey(envName: string): string {
-    return `xrm.env.${envName}.credentials`;
+    return `dynamics365tools.env.${envName}.credentials`;
   }
 }
