@@ -18,14 +18,11 @@ export interface SolutionConfig {
   name: string;
   /** Publisher prefix used for web resource paths, e.g. new_ */
   prefix: string;
-  default?: boolean;
 }
 
 export interface XrmConfiguration {
   environments: EnvironmentConfig[];
   solutions: SolutionConfig[];
-  /** Default solution name (unique name) */
-  defaultSolution?: string;
   /** Supported web resource file extensions (lowercase, dot-prefixed) */
   webResourceSupportedExtensions?: string[];
 }

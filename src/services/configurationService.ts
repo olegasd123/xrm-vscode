@@ -64,14 +64,12 @@ export class ConfigurationService {
           {
             name: "CoreWebResources",
             prefix: "new_",
-            default: true,
           },
           {
             name: "ComponentWebResources",
             prefix: "cmp_",
           },
         ],
-        defaultSolution: "CoreWebResources",
         webResourceSupportedExtensions: WEB_RESOURCE_SUPPORTED_EXTENSIONS,
       };
       await this.saveConfiguration(defaults);

@@ -40,12 +40,10 @@ export class UiService {
 
   async promptSolution(
     solutions: SolutionConfig[],
-    defaultSolutionName?: string,
   ): Promise<SolutionConfig | undefined> {
     if (!solutions.length) {
       const entered = await vscode.window.showInputBox({
         prompt: "Enter solution unique name",
-        value: defaultSolutionName,
         ignoreFocusOut: true,
       });
       if (!entered) {
@@ -58,7 +56,6 @@ export class UiService {
       solutions.map((solution) => ({
         label: solution.prefix || solution.name,
         description: solution.name,
-        picked: solution.name === defaultSolutionName,
         solution,
       })),
       { placeHolder: "Select solution for this resource (prefix shown)" },

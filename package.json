@@ -13,7 +13,6 @@
   "activationEvents": [
     "onCommand:xrm.openResourceMenu",
     "onCommand:xrm.configureEnvironments",
-    "onCommand:xrm.setDefaultSolution",
     "onCommand:xrm.bindResource",
     "onCommand:xrm.publishResource",
     "onCommand:xrm.signInInteractive",
@@ -32,11 +31,6 @@
       {
         "command": "xrm.configureEnvironments",
         "title": "Edit Environments & Solutions",
-        "category": "XRM"
-      },
-      {
-        "command": "xrm.setDefaultSolution",
-        "title": "Set Default Solution",
         "category": "XRM"
       },
       {
@@ -100,9 +94,6 @@
         },
         {
           "command": "xrm.configureEnvironments"
-        },
-        {
-          "command": "xrm.setDefaultSolution"
         },
         {
           "command": "xrm.bindResource"

@@ -16,7 +16,6 @@ Publish Dynamics 365 (XRM) web resources straight from VS Code. Bind local files
 - **Publish last resource** from the status bar (cloud icon) or via `XRM: Publish Last Resource`; remembers the last environment used.
 - **Folder publish extras**: up to 4 files publish in parallel, unchanged files are skipped using `.vscode/xrm.publishCache.json`, and you can cancel from the progress notification.
 - **Auth options**: interactive sign-in (default) or client credentials stored securely; per-environment `authType` control.
-- **Default solution helper**: set a global default solution to prefill bindings and remote paths.
 - **Output channel logging** with clear summaries and a “copy error details” action when something fails.
 
 ### Install
@@ -45,10 +44,9 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`). Ex
     }
   ],
   "solutions": [
-    { "name": "CoreWebResources", "prefix": "cwr_", "default": true },
+    { "name": "CoreWebResources", "prefix": "cwr_" },
     { "name": "ComponentWebResources", "prefix": "cmp_" }
   ],
-  "defaultSolution": "CoreWebResources",
   "webResourceSupportedExtensions": [
     ".js",
     ".css",
@@ -70,7 +68,6 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`). Ex
 ```
 
 Notes:
-- `defaultSolution` is the solution unique name; it is also used to prefill remote paths with the publisher prefix.
 - Set `resource` if the token audience is not the org URL. Turn on `userAgentEnabled` or set `userAgent` to add a custom header to every HTTP call.
 - `createMissingWebResources: false` blocks creation; publish will only update existing items for that environment.
 
@@ -82,7 +79,7 @@ Notes:
 ### Bind resources
 - From Explorer: right-click a file or folder → `XRM` → `Bind Resource`.
 - From Command Palette: `XRM: Bind Resource` (uses the active file/folder).
-- The default remote path uses the publisher prefix from the default solution when it matches the local path; you can overwrite it.
+- The default remote path uses the publisher prefix from the selected solution when it matches the local path; you can overwrite it.
 - Bindings are saved to `.vscode/xrm.bindings.json` for team sharing. Example:
 
 ```jsonc
@@ -111,7 +108,6 @@ File bindings win over folder bindings when both cover the same file.
 - For bound folders, supported files inside are published (file bindings are used when present). Up to 4 files publish at once. The progress dialog can be cancelled.
 - Unchanged files in a folder publish are skipped using `.vscode/xrm.publishCache.json` (based on content hash, size, and mtime).
 - Quick publish: click the status bar item (cloud upload) or run `XRM: Publish Last Resource` to republish the most recent file or folder with the same environment and binding.
-- `XRM: Set Default Solution` updates the global default solution and helps prefill new bindings.
 
 ### Supported file types
 By default: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. Adjust the list with `webResourceSupportedExtensions` in `xrm.config.json`; the Explorer `XRM` menu is always visible, but actions only run for extensions included in this list.

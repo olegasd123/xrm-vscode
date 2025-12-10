@@ -50,17 +50,14 @@ test("promptSolution uses quick pick when solutions exist", async () => {
   };
 
   try {
-    const solution = await ui.promptSolution(
-      [
-        { name: "Core", prefix: "new_", default: true },
-        { name: "Feature", prefix: "feat_" },
-      ],
-      "Core",
-    );
+    const solution = await ui.promptSolution([
+      { name: "Core", prefix: "new_" },
+      { name: "Feature", prefix: "feat_" },
+    ]);
 
     assert.strictEqual(solution?.name, "Feature");
-    assert.strictEqual(receivedItems?.[0].picked, true);
-    assert.strictEqual(receivedItems?.[1].picked, false);
+    assert.strictEqual(receivedItems?.[0].label, "new_");
+    assert.strictEqual(receivedItems?.[1].label, "feat_");
   } finally {
     (vscode.window as any).showQuickPick = originalQuickPick;
   }
@@ -72,7 +69,7 @@ test("promptSolution falls back to input box when no solutions configured", asyn
   (vscode.window as any).showInputBox = async () => "EnteredSolution";
 
   try {
-    const solution = await ui.promptSolution([], "DefaultSolution");
+    const solution = await ui.promptSolution([]);
 
     assert.deepStrictEqual(solution, {
       name: "EnteredSolution",

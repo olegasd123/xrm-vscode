@@ -72,9 +72,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("xrm.configureEnvironments", async () =>
       editConfiguration(configuration),
     ),
-    vscode.commands.registerCommand("xrm.setDefaultSolution", async () =>
-      setDefaultSolution(configuration),
-    ),
     vscode.commands.registerCommand("xrm.bindResource", async (uri?: vscode.Uri) =>
       addBinding(uri, configuration, bindings, ui),
     ),
@@ -306,24 +303,16 @@ async function addBinding(
   const stat = await vscode.workspace.fs.stat(targetUri);
   const kind = stat.type === vscode.FileType.Directory ? "folder" : "file";
   const relative = configuration.getRelativeToWorkspace(targetUri.fsPath);
-  const defaultSolutionConfig =
-    config.solutions.find((s) => s.name === config.defaultSolution) ||
-    config.solutions.find((s) => s.default) ||
-    config.solutions[0];
-  const defaultPrefix = defaultSolutionConfig?.prefix;
-  const defaultRemote = buildDefaultRemotePath(relative, defaultPrefix);
-
-  const remotePath = await ui.promptRemotePath(defaultRemote);
-  if (!remotePath) {
-    return;
-  }
-
-  const solutionConfig =
-    (await ui.promptSolution(config.solutions, defaultSolutionConfig?.name)) ||
-    defaultSolutionConfig;
+  const solutionConfig = await ui.promptSolution(config.solutions);
 
   if (!solutionConfig) {
     vscode.window.showWarningMessage("No solution selected. Binding was not created.");
+    return;
+  }
+
+  const defaultRemote = buildDefaultRemotePath(relative, solutionConfig.prefix);
+  const remotePath = await ui.promptRemotePath(defaultRemote);
+  if (!remotePath) {
     return;
   }
 
@@ -520,39 +509,6 @@ async function editConfiguration(configuration: ConfigurationService): Promise<v
     "xrm.config.json",
   );
   await vscode.window.showTextDocument(uri);
-}
-
-async function setDefaultSolution(configuration: ConfigurationService): Promise<void> {
-  const config = await configuration.loadConfiguration();
-  const candidate =
-    (await vscode.window.showInputBox({
-      prompt: "Enter default solution unique name or pick an existing one to set it globally",
-      value: config.defaultSolution,
-      placeHolder: config.solutions.map((s) => s.name).join(", "),
-    })) ?? config.defaultSolution;
-
-  if (!candidate) {
-    return;
-  }
-
-  config.defaultSolution = candidate;
-  config.solutions = markDefault(config.solutions, candidate);
-  await configuration.saveConfiguration(config);
-  vscode.window.showInformationMessage(`Default solution set to ${candidate}.`);
-}
-
-function markDefault(
-  solutions: {
-    prefix: string;
-    name: string;
-    default?: boolean;
-  }[],
-  defaultName: string,
-) {
-  return solutions.map((solution) => ({
-    ...solution,
-    default: solution.name === defaultName,
-  }));
 }
 
 async function setEnvironmentCredentials(

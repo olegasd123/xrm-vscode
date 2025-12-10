@@ -20,7 +20,6 @@ const solutionSchemaBase = z.object({
   name: z.string().min(1).optional(),
   solutionName: z.string().min(1).optional(),
   prefix: z.string().min(1),
-  default: z.boolean().optional(),
 });
 
 export const solutionSchema = solutionSchemaBase
@@ -36,13 +35,11 @@ export const solutionSchema = solutionSchemaBase
   .transform((solution) => ({
     name: solution.name ?? solution.solutionName ?? "",
     prefix: solution.prefix,
-    default: solution.default,
   }));
 
 export const configurationSchema = z.object({
   environments: z.array(environmentSchema),
   solutions: z.array(solutionSchema),
-  defaultSolution: z.string().optional(),
   webResourceSupportedExtensions: z.array(z.string()).optional(),
 });
 
