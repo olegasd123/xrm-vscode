@@ -8,7 +8,7 @@ import { PublishCacheService } from "../services/publishCacheService";
 import { ConfigurationService } from "../services/configurationService";
 
 test("publish cache tracks unchanged files per environment", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-cache-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-cache-"));
   const configuration = { workspaceRoot } as unknown as ConfigurationService;
   const cache = new PublishCacheService(configuration);
   const stat: vscode.FileStat = {

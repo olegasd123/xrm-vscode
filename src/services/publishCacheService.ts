@@ -79,7 +79,7 @@ export class PublishCacheService {
       await this.ensureVscodeFolder(cacheUri);
       const content = await vscode.workspace.fs.readFile(cacheUri);
       this.cache = publishCacheSchema.parse(
-        this.parseJson(content, "xrm.publishCache.json"),
+        this.parseJson(content, "dynamics365tools.publishCache.json"),
       ) as Record<string, PublishCacheEntry>;
     } catch (error) {
       this.cache = {};
@@ -110,7 +110,7 @@ export class PublishCacheService {
       return undefined;
     }
     const workspaceUri = vscode.Uri.file(root);
-    return vscode.Uri.joinPath(workspaceUri, ".vscode", "xrm.publishCache.json");
+    return vscode.Uri.joinPath(workspaceUri, ".vscode", "dynamics365tools.publishCache.json");
   }
 
   private async ensureVscodeFolder(cacheUri: vscode.Uri): Promise<void> {

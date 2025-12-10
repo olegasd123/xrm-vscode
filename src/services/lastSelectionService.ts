@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-const LAST_ENV_KEY = "xrm.lastEnvironment";
+const LAST_ENV_KEY = "dynamics365tools.lastEnvironment";
 
 /**
  * Stores user choices per workspace so we can preselect them later.

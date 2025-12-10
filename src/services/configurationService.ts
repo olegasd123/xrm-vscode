@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { BindingSnapshot, XrmConfiguration, BindingEntry } from "../types";
+import { BindingSnapshot, Dynamics365Configuration, BindingEntry } from "../types";
 import { configurationSchema, bindingsSchema } from "./schemas";
 
 export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [
@@ -21,8 +21,8 @@ export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [
   ".svg",
 ];
 
-const CONFIG_FILENAME = "xrm.config.json";
-const BINDINGS_FILENAME = "xrm.bindings.json";
+const CONFIG_FILENAME = "dynamics365tools.config.json";
+const BINDINGS_FILENAME = "dynamics365tools.bindings.json";
 
 export class ConfigurationService {
   private readonly workspaceFolder: vscode.WorkspaceFolder | undefined;
@@ -35,11 +35,11 @@ export class ConfigurationService {
     return this.workspaceFolder?.uri.fsPath;
   }
 
-  async loadConfiguration(): Promise<XrmConfiguration> {
+  async loadConfiguration(): Promise<Dynamics365Configuration> {
     const uri = this.getConfigUri();
     const exists = await this.exists(uri);
     if (!exists) {
-      const defaults: XrmConfiguration = {
+      const defaults: Dynamics365Configuration = {
         environments: [
           {
             name: "dev",
@@ -76,10 +76,10 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    return configurationSchema.parse(this.parseJson(content, "xrm.config.json"));
+    return configurationSchema.parse(this.parseJson(content, "dynamics365tools.config.json"));
   }
 
-  async saveConfiguration(config: XrmConfiguration): Promise<void> {
+  async saveConfiguration(config: Dynamics365Configuration): Promise<void> {
     const uri = this.getConfigUri();
     await this.ensureVscodeFolder();
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(config, null, 2), "utf8"));
@@ -95,7 +95,7 @@ export class ConfigurationService {
     }
 
     const content = await vscode.workspace.fs.readFile(uri);
-    return bindingsSchema.parse(this.parseJson(content, "xrm.bindings.json"));
+    return bindingsSchema.parse(this.parseJson(content, "dynamics365tools.bindings.json"));
   }
 
   async saveBindings(snapshot: BindingSnapshot): Promise<void> {

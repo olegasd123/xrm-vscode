@@ -8,7 +8,7 @@ export class UiService {
   ): Promise<EnvironmentConfig | undefined> {
     if (!environments.length) {
       vscode.window.showErrorMessage(
-        "No environments configured. Run 'XRM: Edit Environments & Solutions' first.",
+        "No environments configured. Run 'Dynamics 365 Tools: Edit Environments & Solutions' first.",
       );
       return undefined;
     }

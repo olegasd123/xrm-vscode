@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { PublisherService } from "../services/publisherService";
 
 test("resolvePaths maps folder bindings to nested files", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const folder = path.join(workspaceRoot, "web");
   const file = path.join(folder, "script.js");
@@ -31,7 +31,7 @@ test("resolvePaths maps folder bindings to nested files", async () => {
 });
 
 test("resolvePaths rejects publishing a directory target", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const folder = path.join(workspaceRoot, "web");
   await fs.mkdir(folder, { recursive: true });
@@ -130,7 +130,7 @@ test("buildUserAgent returns default format when enabled", () => {
     userAgentEnabled: true,
   });
 
-  assert.strictEqual(userAgent, "XRM-VSCode/1.2.3");
+  assert.strictEqual(userAgent, "Dynamics365Tools-VSCode/1.2.3");
 });
 
 test("buildUserAgent returns custom value when provided", () => {
@@ -170,7 +170,7 @@ test("acquireTokenWithClientCredentials sends user agent when provided", async (
 });
 
 test("publish fails fast when solution is missing", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");
@@ -213,7 +213,7 @@ test("publish fails fast when solution is missing", async () => {
 });
 
 test("publish aborts when remotePath matches multiple resources", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");
@@ -284,7 +284,7 @@ test("buildError surfaces code and correlation id", async () => {
 });
 
 test("publish returns cancellation result when token is cancelled", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");
@@ -326,7 +326,7 @@ test("publish returns cancellation result when token is cancelled", async () => 
 });
 
 test("publish creates a new web resource and adds it to the solution", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");
@@ -392,7 +392,7 @@ test("publish creates a new web resource and adds it to the solution", async () 
 });
 
 test("publish updates an existing web resource for folder binding", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const folder = path.join(workspaceRoot, "web");
   const file = path.join(folder, "script.js");
@@ -458,7 +458,7 @@ test("publish updates an existing web resource for folder binding", async () => 
 });
 
 test("publish skips when cache reports unchanged", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");
@@ -501,7 +501,7 @@ test("publish skips when cache reports unchanged", async () => {
 });
 
 test("publish respects createMissingWebResources=false and skips missing resource", async () => {
-  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "xrm-publish-"));
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dynamics365-publish-"));
   (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(workspaceRoot) }];
   const file = path.join(workspaceRoot, "script.js");
   await fs.writeFile(file, "console.log('hi');");

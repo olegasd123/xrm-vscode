@@ -42,7 +42,7 @@ export class PublisherService {
   private publishQueue: Promise<void> = Promise.resolve();
 
   constructor() {
-    this.output = vscode.window.createOutputChannel("XRM Publisher");
+    this.output = vscode.window.createOutputChannel("Dynamics 365 Tools Publisher");
   }
 
   async publish(
@@ -201,10 +201,10 @@ export class PublisherService {
         const summary = parts.join(", ");
         if (result.failed || cancelled) {
           vscode.window.showWarningMessage(
-            `XRM publish to ${envName}: ${cancelled ? "cancelled, " : ""}${summary} (check output for errors)`,
+            `Dynamics 365 Tools publish to ${envName}: ${cancelled ? "cancelled, " : ""}${summary} (check output for errors)`,
           );
         } else {
-          vscode.window.showInformationMessage(`XRM publish to ${envName}: ${summary}`);
+          vscode.window.showInformationMessage(`Dynamics 365 Tools publish to ${envName}: ${summary}`);
         }
       }
     }
@@ -730,7 +730,7 @@ export class PublisherService {
   private async notifyError(message: string, error?: unknown): Promise<void> {
     const copyAction = "Copy error details";
     const selection = await vscode.window.showErrorMessage(
-      `XRM publish failed: ${message}`,
+      `Dynamics 365 Tools publish failed: ${message}`,
       copyAction,
     );
     if (selection !== copyAction) {
@@ -845,8 +845,8 @@ export class PublisherService {
     if (env.userAgent?.trim()) {
       return env.userAgent.trim();
     }
-    const extension = vscode.extensions.getExtension("your-name.xrm-vscode");
+    const extension = vscode.extensions.getExtension("your-name.dynamics-365-tools");
     const version = (extension?.packageJSON as { version?: string })?.version || "dev";
-    return `XRM-VSCode/${version}`;
+    return `Dynamics365Tools-VSCode/${version}`;
   }
 }

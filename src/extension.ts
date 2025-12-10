@@ -4,7 +4,7 @@ import { ConfigurationService, WEB_RESOURCE_SUPPORTED_EXTENSIONS } from "./servi
 import { BindingService } from "./services/bindingService";
 import { UiService } from "./services/uiService";
 import { PublisherService } from "./services/publisherService";
-import { BindingEntry, XrmConfiguration } from "./types";
+import { BindingEntry, Dynamics365Configuration } from "./types";
 import { SecretService } from "./services/secretService";
 import { AuthService } from "./services/authService";
 import { StatusBarService } from "./services/statusBarService";
@@ -20,12 +20,12 @@ export async function activate(context: vscode.ExtensionContext) {
   const publisher = new PublisherService();
   const secrets = new SecretService(context.secrets);
   const auth = new AuthService();
-  const statusBar = new StatusBarService("xrm.publishLastResource");
+  const statusBar = new StatusBarService("dynamics365Tools.publishLastResource");
   const lastSelection = new LastSelectionService(context.workspaceState);
   const publishCache = new PublishCacheService(configuration);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("xrm.openResourceMenu", async (uri?: vscode.Uri) =>
+    vscode.commands.registerCommand("dynamics365Tools.openResourceMenu", async (uri?: vscode.Uri) =>
       openResourceMenu(
         uri,
         configuration,
@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
         publishCache,
       ),
     ),
-    vscode.commands.registerCommand("xrm.publishResource", async (uri?: vscode.Uri) =>
+    vscode.commands.registerCommand("dynamics365Tools.publishResource", async (uri?: vscode.Uri) =>
       publishResource(
         uri,
         configuration,
@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
         publishCache,
       ),
     ),
-    vscode.commands.registerCommand("xrm.publishLastResource", async () =>
+    vscode.commands.registerCommand("dynamics365Tools.publishLastResource", async () =>
       publishLastResource(
         configuration,
         bindings,
@@ -66,16 +66,16 @@ export async function activate(context: vscode.ExtensionContext) {
         publishCache,
       ),
     ),
-    vscode.commands.registerCommand("xrm.configureEnvironments", async () =>
+    vscode.commands.registerCommand("dynamics365Tools.configureEnvironments", async () =>
       editConfiguration(configuration),
     ),
-    vscode.commands.registerCommand("xrm.bindResource", async (uri?: vscode.Uri) =>
+    vscode.commands.registerCommand("dynamics365Tools.bindResource", async (uri?: vscode.Uri) =>
       addBinding(uri, configuration, bindings, ui),
     ),
-    vscode.commands.registerCommand("xrm.setEnvironmentCredentials", async () =>
+    vscode.commands.registerCommand("dynamics365Tools.setEnvironmentCredentials", async () =>
       setEnvironmentCredentials(configuration, ui, secrets),
     ),
-    vscode.commands.registerCommand("xrm.signInInteractive", async () =>
+    vscode.commands.registerCommand("dynamics365Tools.signInInteractive", async () =>
       signInInteractive(configuration, ui, auth, lastSelection),
     ),
     statusBar,
@@ -355,7 +355,7 @@ async function publishFlow(
   statusBar: StatusBarService,
   lastSelection: LastSelectionService,
   publishCache: PublishCacheService,
-  config?: XrmConfiguration,
+  config?: Dynamics365Configuration,
   preferredEnvName?: string,
 ) {
   const publishAuth = await pickEnvironmentAndAuth(
@@ -396,7 +396,7 @@ async function publishFolder(
   statusBar: StatusBarService,
   lastSelection: LastSelectionService,
   publishCache: PublishCacheService,
-  config?: XrmConfiguration,
+  config?: Dynamics365Configuration,
   preferredEnvName?: string,
 ): Promise<void> {
   const files = await collectSupportedFiles(folderUri, supportedExtensions);
@@ -427,7 +427,7 @@ async function publishFolder(
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      vscode.window.showErrorMessage(`XRM publish failed: ${message}`);
+      vscode.window.showErrorMessage(`Dynamics 365 Tools publish failed: ${message}`);
       return;
     }
   }
@@ -490,7 +490,7 @@ async function publishFolder(
           ? `${processed} file(s) processed before cancellation`
           : "No files were processed";
         vscode.window.showWarningMessage(
-          `XRM publish to ${publishAuth.env.name} cancelled: ${summary}.`,
+          `Dynamics 365 Tools publish to ${publishAuth.env.name} cancelled: ${summary}.`,
         );
       }
     },
@@ -503,7 +503,7 @@ async function editConfiguration(configuration: ConfigurationService): Promise<v
   const uri = vscode.Uri.joinPath(
     vscode.Uri.file(configuration.workspaceRoot || "."),
     ".vscode",
-    "xrm.config.json",
+    "dynamics365tools.config.json",
   );
   await vscode.window.showTextDocument(uri);
 }
@@ -590,11 +590,11 @@ async function pickEnvironmentAndAuth(
   secrets: SecretService,
   auth: AuthService,
   lastSelection: LastSelectionService,
-  config?: XrmConfiguration,
+  config?: Dynamics365Configuration,
   preferredEnvName?: string,
 ): Promise<
   | {
-      env: XrmConfiguration["environments"][number];
+      env: Dynamics365Configuration["environments"][number];
       auth: {
         accessToken?: string;
         credentials?: Awaited<ReturnType<SecretService["getCredentials"]>>;
@@ -603,7 +603,7 @@ async function pickEnvironmentAndAuth(
   | undefined
 > {
   const resolvedConfig = config ?? (await configuration.loadConfiguration());
-  let env: XrmConfiguration["environments"][number] | undefined;
+  let env: Dynamics365Configuration["environments"][number] | undefined;
   if (preferredEnvName) {
     env = resolvedConfig.environments.find((candidate) => candidate.name === preferredEnvName);
     if (!env) {
@@ -654,7 +654,7 @@ async function ensureSupportedResource(
   const ext = path.extname(uri.fsPath).toLowerCase();
   if (!isSupportedExtension(ext, supportedExtensions)) {
     vscode.window.showInformationMessage(
-      "XRM actions are available only for supported web resource types.",
+      "Dynamics 365 Tools actions are available only for supported web resource types.",
     );
     return false;
   }

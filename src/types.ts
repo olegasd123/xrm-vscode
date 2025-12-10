@@ -20,7 +20,7 @@ export interface SolutionConfig {
   prefix: string;
 }
 
-export interface XrmConfiguration {
+export interface Dynamics365Configuration {
   environments: EnvironmentConfig[];
   solutions: SolutionConfig[];
   /** Supported web resource file extensions (lowercase, dot-prefixed) */

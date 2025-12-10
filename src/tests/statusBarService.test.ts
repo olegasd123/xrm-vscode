@@ -21,7 +21,7 @@ test("setLastPublish renders status bar entry with environment and solution", ()
     path.relative("/workspace", uri.fsPath);
 
   try {
-    const service = new StatusBarService("xrm.publish");
+    const service = new StatusBarService("dynamics365Tools.publish");
     service.setLastPublish({
       binding: {
         relativeLocalPath: "/workspace/web/script.js",
@@ -61,7 +61,7 @@ test("clear removes last publish context and hides the status bar item", () => {
     path.relative("/workspace", uri.fsPath);
 
   try {
-    const service = new StatusBarService("xrm.publish");
+    const service = new StatusBarService("dynamics365Tools.publish");
     service.setLastPublish({
       binding: {
         relativeLocalPath: "/workspace/web/script.js",

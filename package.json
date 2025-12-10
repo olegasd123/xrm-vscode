@@ -1,7 +1,7 @@
 {
-  "name": "xrm-vscode",
-  "displayName": "XRM Web Resource Publisher",
-  "description": "Publish Dynamics 365 (XRM) web resources directly from VS Code with environment-aware bindings.",
+  "name": "dynamics-365-tools",
+  "displayName": "Dynamics 365 Tools",
+  "description": "Publish Dynamics 365 web resources directly from VS Code with environment-aware bindings.",
   "version": "0.0.1",
   "publisher": "your-name",
   "engines": {
@@ -11,104 +11,104 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:xrm.openResourceMenu",
-    "onCommand:xrm.configureEnvironments",
-    "onCommand:xrm.bindResource",
-    "onCommand:xrm.publishResource",
-    "onCommand:xrm.signInInteractive",
-    "onCommand:xrm.setEnvironmentCredentials",
-    "onCommand:xrm.publishLastResource",
+    "onCommand:dynamics365Tools.openResourceMenu",
+    "onCommand:dynamics365Tools.configureEnvironments",
+    "onCommand:dynamics365Tools.bindResource",
+    "onCommand:dynamics365Tools.publishResource",
+    "onCommand:dynamics365Tools.signInInteractive",
+    "onCommand:dynamics365Tools.setEnvironmentCredentials",
+    "onCommand:dynamics365Tools.publishLastResource",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "xrm.openResourceMenu",
+        "command": "dynamics365Tools.openResourceMenu",
         "title": "Resource Actions",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.configureEnvironments",
+        "command": "dynamics365Tools.configureEnvironments",
         "title": "Edit Environments & Solutions",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.bindResource",
+        "command": "dynamics365Tools.bindResource",
         "title": "Bind Resource",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.publishResource",
+        "command": "dynamics365Tools.publishResource",
         "title": "Publish Resource",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.publishLastResource",
+        "command": "dynamics365Tools.publishLastResource",
         "title": "Publish Last Resource",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.setEnvironmentCredentials",
+        "command": "dynamics365Tools.setEnvironmentCredentials",
         "title": "Set Environment Credentials",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       },
       {
-        "command": "xrm.signInInteractive",
+        "command": "dynamics365Tools.signInInteractive",
         "title": "Sign In (Interactive)",
-        "category": "XRM"
+        "category": "Dynamics 365 Tools"
       }
     ],
     "submenus": [
       {
-        "id": "xrm.resourceMenu",
-        "label": "XRM"
+        "id": "dynamics365Tools.resourceMenu",
+        "label": "Dynamics 365 Tools"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "submenu": "xrm.resourceMenu",
-          "group": "navigation@xrm",
+          "submenu": "dynamics365Tools.resourceMenu",
+          "group": "navigation@dynamics365Tools",
           "when": "resourceScheme == 'file' && (explorerResourceIsFolder || resourceExtname =~ /\\.(js|css|html|htm|xml|json|resx|png|jpg|jpeg|gif|xsl|xslt|ico|svg)$/)"
         }
       ],
-      "xrm.resourceMenu": [
+      "dynamics365Tools.resourceMenu": [
         {
-          "command": "xrm.publishResource",
+          "command": "dynamics365Tools.publishResource",
           "group": "inline@1",
           "when": "true"
         },
         {
-          "command": "xrm.bindResource",
+          "command": "dynamics365Tools.bindResource",
           "group": "inline@2"
         },
         {
-          "command": "xrm.configureEnvironments",
+          "command": "dynamics365Tools.configureEnvironments",
           "group": "inline@3"
         }
       ],
       "commandPalette": [
         {
-          "command": "xrm.openResourceMenu"
+          "command": "dynamics365Tools.openResourceMenu"
         },
         {
-          "command": "xrm.configureEnvironments"
+          "command": "dynamics365Tools.configureEnvironments"
         },
         {
-          "command": "xrm.bindResource"
+          "command": "dynamics365Tools.bindResource"
         },
         {
-          "command": "xrm.publishResource"
+          "command": "dynamics365Tools.publishResource"
         },
         {
-          "command": "xrm.publishLastResource"
+          "command": "dynamics365Tools.publishLastResource"
         },
         {
-          "command": "xrm.setEnvironmentCredentials"
+          "command": "dynamics365Tools.setEnvironmentCredentials"
         },
         {
-          "command": "xrm.signInInteractive"
+          "command": "dynamics365Tools.signInInteractive"
         }
       ]
     }
