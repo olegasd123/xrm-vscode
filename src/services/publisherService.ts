@@ -326,8 +326,6 @@ export class PublisherService {
         return 6;
       case ".gif":
         return 7;
-      case ".xap":
-        return 8;
       case ".xsl":
       case ".xslt":
         return 10;

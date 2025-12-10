@@ -15,7 +15,6 @@ export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [
   ".jpg",
   ".jpeg",
   ".gif",
-  ".xap",
   ".xsl",
   ".xslt",
   ".ico",

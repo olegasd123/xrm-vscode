@@ -61,7 +61,6 @@ Edit `.vscode/xrm.config.json` (or run `XRM: Edit Environments & Solutions`). Ex
     ".jpg",
     ".jpeg",
     ".gif",
-    ".xap",
     ".xsl",
     ".xslt",
     ".ico",
@@ -115,4 +114,4 @@ File bindings win over folder bindings when both cover the same file.
 - `XRM: Set Default Solution` updates the global default solution and helps prefill new bindings.
 
 ### Supported file types
-By default: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xap`, `.xsl`, `.xslt`, `.ico`, `.svg`. Adjust the list with `webResourceSupportedExtensions` in `xrm.config.json` to change what appears in the `XRM` menu and what folder publishes include.
+By default: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. Adjust the list with `webResourceSupportedExtensions` in `xrm.config.json`; the Explorer `XRM` menu is always visible, but actions only run for extensions included in this list.
