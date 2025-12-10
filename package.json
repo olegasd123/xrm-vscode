@@ -3,7 +3,7 @@
   "displayName": "Dynamics 365 Tools",
   "description": "Publish Dynamics 365 web resources directly from VS Code with environment-aware bindings.",
   "version": "1.0.1",
-  "publisher": "dynamics365tools",
+  "publisher": "oleg-verhoglyad",
   "icon": "assets/icon.png",
   "license": "MIT",
   "keywords": [
