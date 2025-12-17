@@ -41,8 +41,7 @@ export class PluginRegistrationManager {
         continue;
       }
 
-      const targetName = plugin.name ?? plugin.typeName;
-      const friendlyName = plugin.friendlyName ?? plugin.name ?? plugin.typeName;
+      const targetName = this.resolveTargetName(plugin);
       const match = existingByType.get(key);
       if (!match) {
         if (options.allowCreate === false) {
@@ -52,10 +51,13 @@ export class PluginRegistrationManager {
 
         const id = await options.pluginService.createPluginType(options.assemblyId, {
           name: targetName,
-          friendlyName,
+          friendlyName: targetName,
           typeName: plugin.typeName,
           solutionName: options.solutionName,
         });
+
+        const friendlyName = this.buildFriendlyName(id);
+        await options.pluginService.updatePluginType(id, { friendlyName });
         created.push({
           id,
           name: targetName,
@@ -66,8 +68,9 @@ export class PluginRegistrationManager {
       }
 
       const changes: PluginTypeUpdateInput = {};
+      const targetFriendlyName = this.buildFriendlyName(match.id);
       if (match.name !== targetName) changes.name = targetName;
-      if (match.friendlyName !== friendlyName) changes.friendlyName = friendlyName;
+      if (match.friendlyName !== targetFriendlyName) changes.friendlyName = targetFriendlyName;
       if (match.typeName !== plugin.typeName) changes.typeName = plugin.typeName;
 
       if (Object.keys(changes).length || options.solutionName) {
@@ -80,7 +83,7 @@ export class PluginRegistrationManager {
           ...changes,
           typeName: plugin.typeName,
           name: targetName,
-          friendlyName,
+          friendlyName: targetFriendlyName,
         });
       }
 
@@ -99,6 +102,14 @@ export class PluginRegistrationManager {
     }
 
     return { created, updated, removed, skippedCreation };
+  }
+
+  private resolveTargetName(plugin: DiscoveredPluginType): string {
+    return plugin.name ?? plugin.typeName;
+  }
+
+  private buildFriendlyName(id: string): string {
+    return id.trim();
   }
 
   private normalizeKey(value?: string): string | undefined {
