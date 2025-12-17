@@ -56,21 +56,21 @@ export class PluginRegistrationManager {
           solutionName: options.solutionName,
         });
 
-        const friendlyName = this.buildFriendlyName(id);
-        await options.pluginService.updatePluginType(id, { friendlyName });
+        const displayName = this.buildDisplayName(id);
+        await options.pluginService.updatePluginType(id, { friendlyName: displayName });
         created.push({
           id,
           name: targetName,
-          friendlyName,
+          friendlyName: displayName,
           typeName: plugin.typeName,
         });
         continue;
       }
 
       const changes: PluginTypeUpdateInput = {};
-      const targetFriendlyName = this.buildFriendlyName(match.id);
+      const targetDisplayName = this.buildDisplayName(match.id);
       if (match.name !== targetName) changes.name = targetName;
-      if (match.friendlyName !== targetFriendlyName) changes.friendlyName = targetFriendlyName;
+      if (match.friendlyName !== targetDisplayName) changes.friendlyName = targetDisplayName;
       if (match.typeName !== plugin.typeName) changes.typeName = plugin.typeName;
 
       if (Object.keys(changes).length || options.solutionName) {
@@ -83,7 +83,7 @@ export class PluginRegistrationManager {
           ...changes,
           typeName: plugin.typeName,
           name: targetName,
-          friendlyName: targetFriendlyName,
+          friendlyName: targetDisplayName,
         });
       }
 
@@ -108,7 +108,7 @@ export class PluginRegistrationManager {
     return plugin.name ?? plugin.typeName;
   }
 
-  private buildFriendlyName(id: string): string {
+  private buildDisplayName(id: string): string {
     return id.trim();
   }
 
