@@ -288,9 +288,7 @@ export async function deletePluginStep(
   try {
     await service.deleteStep(node.step.id);
     explorer.refresh();
-    void vscode.window.showInformationMessage(
-      `Plugin ${node.step.name} step deleted.`,
-    );
+    void vscode.window.showInformationMessage(`Plugin ${node.step.name} step deleted.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to delete plugin step: ${String(error)}`);
   }
@@ -483,9 +481,7 @@ export async function deletePluginImage(
   try {
     await service.deleteImage(node.image.id);
     explorer.refresh();
-    void vscode.window.showInformationMessage(
-      `Plugin ${node.image.name} image deleted.`,
-    );
+    void vscode.window.showInformationMessage(`Plugin ${node.image.name} image deleted.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to delete plugin image: ${String(error)}`);
   }
