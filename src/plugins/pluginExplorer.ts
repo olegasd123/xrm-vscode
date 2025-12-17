@@ -288,12 +288,10 @@ function buildAssemblyTooltip(assembly: PluginAssembly): vscode.MarkdownString {
 }
 
 function buildTypeTooltip(pluginType: PluginType): vscode.MarkdownString {
-  const modifiedOn = formatDateTimeWithoutSeconds(pluginType.modifiedOn);
   const parts = [
     `**Name:** ${pluginType.name}`,
     pluginType.friendlyName ? `**Friendly name:** ${pluginType.friendlyName}` : undefined,
     pluginType.typeName ? `**Type:** ${pluginType.typeName}` : undefined,
-    modifiedOn ? `**Modified on:** ${modifiedOn}` : undefined,
   ].filter(Boolean);
   return new vscode.MarkdownString(parts.join("\n"));
 }
