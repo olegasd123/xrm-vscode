@@ -6,6 +6,7 @@ export interface PluginAssembly {
   publicKeyToken?: string;
   culture?: string;
   sourceType?: number;
+  modifiedOn?: string;
 }
 
 export interface PluginType {

@@ -227,7 +227,7 @@ export class PluginAssemblyNode extends vscode.TreeItem {
     readonly assembly: PluginAssembly,
   ) {
     super(assembly.name, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = assembly.version;
+    this.description = `[${assembly.version}] ${formatDateTimeWithoutSeconds(assembly.modifiedOn)}`;
     this.tooltip = buildAssemblyTooltip(assembly);
     this.iconPath = new vscode.ThemeIcon("package");
   }
@@ -241,7 +241,6 @@ export class PluginTypeNode extends vscode.TreeItem {
     readonly pluginType: PluginType,
   ) {
     super(pluginType.name, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = formatDateTimeWithoutSeconds(pluginType.modifiedOn);
     this.tooltip = buildTypeTooltip(pluginType);
     this.iconPath = new vscode.ThemeIcon("symbol-class");
   }

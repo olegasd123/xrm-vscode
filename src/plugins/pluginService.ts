@@ -468,7 +468,7 @@ export class PluginService {
 
   private async fetchAssemblies(): Promise<PluginAssembly[]> {
     const url =
-      "/pluginassemblies?$select=pluginassemblyid,name,version,isolationmode,publickeytoken,culture,sourcetype&$orderby=name";
+      "/pluginassemblies?$select=pluginassemblyid,name,version,isolationmode,publickeytoken,culture,sourcetype,modifiedon&$orderby=name";
     const response = await this.client.get<{
       value?: Array<{
         pluginassemblyid?: string;
@@ -478,6 +478,7 @@ export class PluginService {
         publickeytoken?: string;
         culture?: string;
         sourcetype?: number;
+        modifiedon?: string;
       }>;
     }>(url);
 
@@ -491,6 +492,7 @@ export class PluginService {
         publicKeyToken: item.publickeytoken,
         culture: item.culture,
         sourceType: item.sourcetype,
+        modifiedOn: item.modifiedon,
       }));
   }
 
