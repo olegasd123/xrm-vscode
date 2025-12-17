@@ -97,7 +97,7 @@ export async function createPluginStep(
       rank,
       filteringAttributes: filteringAttributes ?? "",
     });
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(`Plugin step ${name} created.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to create plugin step: ${String(error)}`);
@@ -184,7 +184,7 @@ export async function editPluginStep(
       rank,
       filteringAttributes: filteringAttributes ?? "",
     });
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(`Plugin step ${name} updated.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to update plugin step: ${String(error)}`);
@@ -229,7 +229,7 @@ export async function deletePluginStep(
 
   try {
     await service.deleteStep(node.step.id);
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(
       `Plugin ${node.step.name} step deleted.`,
     );
@@ -305,7 +305,7 @@ export async function createPluginImage(
       messagePropertyName,
       attributes: attributes ?? "",
     });
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(`Plugin image ${name} created.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to create plugin image: ${String(error)}`);
@@ -379,7 +379,7 @@ export async function editPluginImage(
       messagePropertyName,
       attributes: attributes ?? "",
     });
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(`Plugin image ${name} updated.`);
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to update plugin image: ${String(error)}`);
@@ -424,7 +424,7 @@ export async function deletePluginImage(
 
   try {
     await service.deleteImage(node.image.id);
-    explorer.refresh(node);
+    explorer.refresh();
     void vscode.window.showInformationMessage(
       `Plugin ${node.image.name} image deleted.`,
     );
