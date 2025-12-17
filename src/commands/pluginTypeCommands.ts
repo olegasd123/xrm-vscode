@@ -29,7 +29,7 @@ export async function deletePluginType(
   }
 
   const confirmation = await vscode.window.showWarningMessage(
-    `Remove plugin '${node.pluginType.friendlyName ?? node.pluginType.name}' from ${node.env.name}? All steps and images will also be removed.`,
+    `Remove plugin '${node.pluginType.name}' from ${node.env.name}? All steps and images will also be removed.`,
     { modal: true },
     "Delete",
   );

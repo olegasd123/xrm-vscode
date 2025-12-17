@@ -77,7 +77,7 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
     }
 
     if (element instanceof PluginStepNode) {
-      return this.loadImages(element.env, element.step);
+      return this.loadImages(element.env, element.pluginType, element.step);
     }
 
     return [];
@@ -118,7 +118,10 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
 
     try {
       const types = await service.listPluginTypes(assembly.id);
-      return types.map((type) => new PluginTypeNode(env, type));
+      return types
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }))
+        .map((type) => new PluginTypeNode(env, type));
     } catch (error) {
       void vscode.window.showErrorMessage(
         `Failed to load plugin types for ${assembly.name}: ${String(error)}`,
@@ -138,7 +141,7 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
 
     try {
       const steps = await service.listSteps(pluginType.id);
-      return steps.map((step) => new PluginStepNode(env, step));
+      return steps.map((step) => new PluginStepNode(env, pluginType, step));
     } catch (error) {
       void vscode.window.showErrorMessage(
         `Failed to load steps for ${pluginType.name}: ${String(error)}`,
@@ -149,6 +152,7 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
 
   private async loadImages(
     env: EnvironmentConfig,
+    pluginType: PluginType,
     step: PluginStep,
   ): Promise<PluginExplorerNode[]> {
     const service = await this.getPluginService(env);
@@ -158,7 +162,7 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
 
     try {
       const images = await service.listImages(step.id);
-      return images.map((image) => new PluginImageNode(env, image));
+      return images.map((image) => new PluginImageNode(env, pluginType, step, image));
     } catch (error) {
       void vscode.window.showErrorMessage(
         `Failed to load images for ${step.name}: ${String(error)}`,
@@ -251,11 +255,13 @@ export class PluginStepNode extends vscode.TreeItem {
 
   constructor(
     readonly env: EnvironmentConfig,
+    readonly pluginType: PluginType,
     readonly step: PluginStep,
   ) {
-    super(step.name, vscode.TreeItemCollapsibleState.Collapsed);
+    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    super(pluginLabel, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = buildStepDescription(step);
-    this.tooltip = buildStepTooltip(step);
+    this.tooltip = buildStepTooltip(pluginType, step);
     this.iconPath = new vscode.ThemeIcon("run");
   }
 }
@@ -265,11 +271,14 @@ export class PluginImageNode extends vscode.TreeItem {
 
   constructor(
     readonly env: EnvironmentConfig,
+    readonly pluginType: PluginType,
+    readonly step: PluginStep,
     readonly image: PluginImage,
   ) {
-    super(image.name, vscode.TreeItemCollapsibleState.None);
+    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    super(pluginLabel, vscode.TreeItemCollapsibleState.None);
     this.description = buildImageDescription(image);
-    this.tooltip = buildImageTooltip(image);
+    this.tooltip = buildImageTooltip(pluginType, image);
     this.iconPath = new vscode.ThemeIcon("file-media");
   }
 }
@@ -304,9 +313,10 @@ function buildStepDescription(step: PluginStep): string | undefined {
   return segments.join(" • ") || undefined;
 }
 
-function buildStepTooltip(step: PluginStep): vscode.MarkdownString {
+function buildStepTooltip(pluginType: PluginType, step: PluginStep): vscode.MarkdownString {
   const lines = [
-    `**Name:** ${step.name}`,
+    `**Plugin:** ${pluginType.typeName ?? pluginType.name}`,
+    step.name ? `**Step name:** ${step.name}` : undefined,
     step.messageName ? `**Message:** ${step.messageName}` : undefined,
     step.primaryEntity ? `**Primary entity:** ${step.primaryEntity}` : undefined,
     step.stage !== undefined ? `**Stage:** ${formatStepStage(step.stage)}` : undefined,
@@ -326,9 +336,10 @@ function buildImageDescription(image: PluginImage): string | undefined {
   return segments.join(" • ") || undefined;
 }
 
-function buildImageTooltip(image: PluginImage): vscode.MarkdownString {
+function buildImageTooltip(pluginType: PluginType, image: PluginImage): vscode.MarkdownString {
   const parts = [
-    `**Name:** ${image.name}`,
+    `**Plugin:** ${pluginType.typeName ?? pluginType.name}`,
+    image.name ? `**Image name:** ${image.name}` : undefined,
     image.entityAlias ? `**Alias:** ${image.entityAlias}` : undefined,
     image.type !== undefined ? `**Type:** ${formatImageType(image.type)}` : undefined,
     image.attributes ? `**Attributes:** ${image.attributes}` : undefined,

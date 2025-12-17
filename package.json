@@ -317,37 +317,37 @@
         {
           "command": "dynamics365Tools.plugins.createStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginType",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "dynamics365Tools.plugins.deletePluginType",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginType",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "dynamics365Tools.plugins.editStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep",
-          "group": "inline"
-        },
-        {
-          "command": "dynamics365Tools.plugins.deleteStep",
-          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "dynamics365Tools.plugins.createImage",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep",
-          "group": "inline"
+          "group": "inline@2"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deleteStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep",
+          "group": "inline@3"
         },
         {
           "command": "dynamics365Tools.plugins.editImage",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "dynamics365Tools.plugins.deleteImage",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
-          "group": "inline"
+          "group": "inline@2"
         }
       ]
     },

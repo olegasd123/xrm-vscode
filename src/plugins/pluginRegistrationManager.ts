@@ -49,28 +49,25 @@ export class PluginRegistrationManager {
           continue;
         }
 
+        const friendlyName = this.resolveFriendlyName(plugin);
         const id = await options.pluginService.createPluginType(options.assemblyId, {
           name: targetName,
-          friendlyName: targetName,
+          friendlyName,
           typeName: plugin.typeName,
           solutionName: options.solutionName,
         });
 
-        const displayName = this.buildDisplayName(id);
-        await options.pluginService.updatePluginType(id, { friendlyName: displayName });
         created.push({
           id,
           name: targetName,
-          friendlyName: displayName,
+          friendlyName,
           typeName: plugin.typeName,
         });
         continue;
       }
 
       const changes: PluginTypeUpdateInput = {};
-      const targetDisplayName = this.buildDisplayName(match.id);
       if (match.name !== targetName) changes.name = targetName;
-      if (match.friendlyName !== targetDisplayName) changes.friendlyName = targetDisplayName;
       if (match.typeName !== plugin.typeName) changes.typeName = plugin.typeName;
 
       if (Object.keys(changes).length || options.solutionName) {
@@ -83,7 +80,7 @@ export class PluginRegistrationManager {
           ...changes,
           typeName: plugin.typeName,
           name: targetName,
-          friendlyName: targetDisplayName,
+          friendlyName: match.friendlyName ?? this.resolveFriendlyName(plugin),
         });
       }
 
@@ -108,8 +105,15 @@ export class PluginRegistrationManager {
     return plugin.name ?? plugin.typeName;
   }
 
-  private buildDisplayName(id: string): string {
-    return id.trim();
+  private resolveFriendlyName(plugin: DiscoveredPluginType): string {
+    const typeName = plugin.typeName?.trim();
+    if (!typeName) {
+      return this.resolveTargetName(plugin);
+    }
+
+    const lastSeparator = Math.max(typeName.lastIndexOf("."), typeName.lastIndexOf("+"));
+    const className = lastSeparator >= 0 ? typeName.slice(lastSeparator + 1) : typeName;
+    return className || typeName;
   }
 
   private normalizeKey(value?: string): string | undefined {
