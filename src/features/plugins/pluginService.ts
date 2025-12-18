@@ -272,6 +272,7 @@ export class PluginService {
       rank?: number;
       filteringAttributes?: string;
       description?: string;
+      solutionName?: string;
     },
   ): Promise<string> {
     const normalizedPluginTypeId = this.normalizeGuid(pluginTypeId);
@@ -309,7 +310,16 @@ export class PluginService {
     if (!id) {
       throw new Error("Step created but no identifier returned.");
     }
-    return this.normalizeGuid(id);
+    const normalizedId = this.normalizeGuid(id);
+    const solutionName = input.solutionName?.trim();
+    if (solutionName) {
+      await this.solutionComponents.ensureInSolution(
+        normalizedId,
+        SolutionComponentType.PluginStep,
+        solutionName,
+      );
+    }
+    return normalizedId;
   }
 
   async updateStep(

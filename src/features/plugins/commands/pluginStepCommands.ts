@@ -7,6 +7,7 @@ import { SecretService } from "../../auth/secretService";
 import { AuthService } from "../../auth/authService";
 import { LastSelectionService } from "../../../platform/vscode/lastSelectionStore";
 import { EnvironmentConnectionService } from "../../dataverse/environmentConnectionService";
+import { Dynamics365Configuration } from "../../config/domain/models";
 import {
   PluginExplorerProvider,
   PluginImageNode,
@@ -20,6 +21,7 @@ import { PluginService } from "../pluginService";
 export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNode): Promise<void> {
   const { configuration, ui, secrets, auth, lastSelection, connections, pluginExplorer } = ctx;
   const explorer = pluginExplorer;
+  const config = await configuration.loadConfiguration();
   if (!node) {
     void vscode.window.showInformationMessage(
       "Run this command from a plugin type in the Plugins explorer.",
@@ -36,6 +38,7 @@ export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNod
     lastSelection,
     connections,
     node.env.name,
+    config,
   );
   if (!service) return;
 
@@ -81,6 +84,9 @@ export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNod
   });
   if (!name) return;
 
+  const solution = await ui.promptSolution(config.solutions);
+  if (!solution) return;
+
   try {
     await service.createStep(node.pluginType.id, {
       name,
@@ -90,6 +96,7 @@ export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNod
       mode,
       rank,
       filteringAttributes: filteringAttributes ?? "",
+      solutionName: solution.name,
     });
     explorer.refresh();
     void vscode.window.showInformationMessage(`Plugin step ${name} created.`);
@@ -442,15 +449,16 @@ async function resolveServiceForNode(
   lastSelection: LastSelectionService,
   connections: EnvironmentConnectionService,
   preferredEnv: string,
+  config?: Dynamics365Configuration,
 ): Promise<PluginService | undefined> {
-  const config = await configuration.loadConfiguration();
+  const resolvedConfig = config ?? (await configuration.loadConfiguration());
   const selection = await pickEnvironmentAndAuth(
     configuration,
     ui,
     secrets,
     auth,
     lastSelection,
-    config,
+    resolvedConfig,
     preferredEnv,
     { placeHolder },
   );
