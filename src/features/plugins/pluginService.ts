@@ -229,6 +229,32 @@ export class PluginService {
       }));
   }
 
+  async listSdkMessageNames(): Promise<string[]> {
+    const names: string[] = [];
+    type SdkMessageListResponse = {
+      value?: Array<{ name?: string }>;
+      "@odata.nextLink"?: string;
+    };
+    let nextUrl:
+      | string
+      | undefined = "/sdkmessages?$select=name&$orderby=name&$filter=isprivate eq false&$top=200";
+
+    while (nextUrl) {
+      const response: SdkMessageListResponse = await this.client.get<SdkMessageListResponse>(
+        nextUrl,
+      );
+
+      names.push(
+        ...(response.value ?? [])
+          .map((item) => item.name)
+          .filter((name): name is string => Boolean(name)),
+      );
+      nextUrl = response["@odata.nextLink"];
+    }
+
+    return Array.from(new Set(names));
+  }
+
   async findAssemblyByName(name: string): Promise<PluginAssembly | undefined> {
     const escapedName = name.replace(/'/g, "''");
     const filter = encodeURIComponent(`name eq '${escapedName}'`);

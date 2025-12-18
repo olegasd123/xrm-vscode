@@ -42,11 +42,7 @@ export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNod
   );
   if (!service) return;
 
-  const messageName = await vscode.window.showInputBox({
-    prompt: "Message name (e.g. Create, Update, Delete)",
-    value: "Create",
-    ignoreFocusOut: true,
-  });
+  const messageName = await pickMessageName(service);
   if (!messageName) return;
 
   const primaryEntity = await vscode.window.showInputBox({
@@ -127,11 +123,7 @@ export async function editPluginStep(ctx: CommandContext, node?: PluginStepNode)
   );
   if (!service) return;
 
-  const messageName = await vscode.window.showInputBox({
-    prompt: "Message name",
-    value: node.step.messageName ?? "Create",
-    ignoreFocusOut: true,
-  });
+  const messageName = await pickMessageName(service, node.step.messageName ?? "Create");
   if (!messageName) return;
 
   const primaryEntity = await vscode.window.showInputBox({
@@ -479,6 +471,68 @@ function buildStepDefaultName(
 ): string {
   const entityLabel = entity || "global";
   return `(Step) ${typeName}: ${message} of ${entityLabel}`;
+}
+
+type MessagePickItem = vscode.QuickPickItem & { isCustom?: boolean };
+
+async function pickMessageName(
+  service: PluginService,
+  defaultValue = "Create",
+): Promise<string | undefined> {
+  let messageNames: string[] = [];
+  try {
+    messageNames = await service.listSdkMessageNames();
+  } catch (error) {
+    void vscode.window.showWarningMessage(
+      `Unable to load SDK messages. Enter a message name manually. ${String(error)}`,
+    );
+    return promptForMessageName(defaultValue);
+  }
+
+  if (!messageNames.length) {
+    return promptForMessageName(defaultValue);
+  }
+
+  const deduped = Array.from(new Set(messageNames));
+  const items: MessagePickItem[] = deduped.map((name) => ({
+    label: name,
+    picked: name === defaultValue,
+  }));
+
+  if (defaultValue && !deduped.includes(defaultValue)) {
+    items.unshift({
+      label: defaultValue,
+      description: "Current value",
+      picked: true,
+    });
+  }
+
+  items.unshift({
+    label: "Enter custom message name...",
+    description: "Type a message name manually",
+    isCustom: true,
+  });
+
+  const selection = await vscode.window.showQuickPick(items, {
+    placeHolder: "Select SDK message name",
+    matchOnDescription: true,
+    ignoreFocusOut: true,
+  });
+
+  if (!selection) return undefined;
+  if ((selection as MessagePickItem).isCustom) {
+    return promptForMessageName(defaultValue);
+  }
+
+  return selection.label;
+}
+
+async function promptForMessageName(defaultValue: string): Promise<string | undefined> {
+  return vscode.window.showInputBox({
+    prompt: "Message name",
+    value: defaultValue,
+    ignoreFocusOut: true,
+  });
 }
 
 async function pickStage(defaultStage?: number): Promise<number | undefined> {
