@@ -1,4 +1,4 @@
-import { DEFAULT_SOLUTION_NAME } from "../../types";
+import { DEFAULT_SOLUTION_NAME } from "../../shared/solutions";
 import { EnvironmentConnection } from "./environmentConnectionService";
 
 export class DataverseClient {

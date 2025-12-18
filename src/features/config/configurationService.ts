@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { BindingSnapshot, Dynamics365Configuration, BindingEntry } from "../../types";
+import { BindingSnapshot, Dynamics365Configuration, BindingEntry } from "./domain/models";
 import { configurationSchema, bindingsSchema } from "./schema";
 
 export const WEB_RESOURCE_SUPPORTED_EXTENSIONS = [

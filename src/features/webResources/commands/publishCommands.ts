@@ -10,7 +10,7 @@ import { EnvironmentConnectionService } from "../../dataverse/environmentConnect
 import { StatusBarService } from "../../../platform/vscode/statusBar";
 import { LastSelectionService } from "../../../platform/vscode/lastSelectionStore";
 import { PublishCacheService } from "../publishCacheService";
-import { BindingEntry, Dynamics365Configuration } from "../../../types";
+import { BindingEntry, Dynamics365Configuration } from "../../config/domain/models";
 import { resolveTargetUri, pickEnvironmentAndAuth } from "../../../platform/vscode/commandUtils";
 import { addBinding } from "./bindingCommands";
 import {

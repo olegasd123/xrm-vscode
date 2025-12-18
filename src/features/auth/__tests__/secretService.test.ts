@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import test from "node:test";
 import * as vscode from "vscode";
-import { SecretService } from "../features/auth/secretService";
+import { SecretService } from "../secretService";
 
 test("setCredentials and getCredentials round-trip credentials", async () => {
   const secrets = new (vscode as any).InMemorySecretStorage();

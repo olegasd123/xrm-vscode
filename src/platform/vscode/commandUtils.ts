@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { AuthService } from "../../features/auth/authService";
 import { SecretService } from "../../features/auth/secretService";
 import { ConfigurationService } from "../../features/config/configurationService";
-import { Dynamics365Configuration, EnvironmentConfig } from "../../types";
+import { Dynamics365Configuration, EnvironmentConfig } from "../../features/config/domain/models";
 import { LastSelectionService } from "./lastSelectionStore";
 import { SolutionPicker } from "./ui/solutionPicker";
 

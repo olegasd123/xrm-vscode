@@ -4,7 +4,7 @@ import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { WebResourcePublisher } from "../features/webResources/webResourcePublisher";
+import { WebResourcePublisher } from "../webResourcePublisher";
 
 class FakeConnections {
   async createConnection(env: { name: string; url: string }, auth: { accessToken?: string }) {

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { DEFAULT_SOLUTION_NAME, EnvironmentConfig, SolutionConfig } from "../../../types";
+import { DEFAULT_SOLUTION_NAME } from "../../../shared/solutions";
+import { EnvironmentConfig, SolutionConfig } from "../../../features/config/domain/models";
 
 type SolutionQuickPickItem = vscode.QuickPickItem & {
   solution?: SolutionConfig;

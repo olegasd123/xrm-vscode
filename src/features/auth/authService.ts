@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { EnvironmentConfig } from "../../types";
+import { EnvironmentConfig } from "../config/domain/models";
 
 export class AuthService {
   async getAccessToken(env: EnvironmentConfig): Promise<string | undefined> {

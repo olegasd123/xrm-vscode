@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { CommandContext } from "../../../app/commandContext";
 import { ConfigurationService } from "../../config/configurationService";
-import { BindingEntry } from "../../../types";
+import { BindingEntry } from "../../config/domain/models";
 import { resolveTargetUri, pickEnvironmentAndAuth } from "../../../platform/vscode/commandUtils";
 import { buildSupportedSet, ensureSupportedResource } from "../core/webResourceHelpers";
 import { addBinding } from "./bindingCommands";

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { EnvironmentConfig } from "../../types";
+import { EnvironmentConfig } from "../config/domain/models";
 import { AuthService } from "../auth/authService";
 import { EnvironmentCredentials, SecretService } from "../auth/secretService";
 

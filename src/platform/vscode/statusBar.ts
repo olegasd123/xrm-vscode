@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { BindingEntry, EnvironmentConfig } from "../../types";
+import { BindingEntry, EnvironmentConfig } from "../../features/config/domain/models";
 
 export interface LastPublishContext {
   binding: BindingEntry;

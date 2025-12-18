@@ -3,8 +3,8 @@ import test from "node:test";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { BindingService } from "../features/webResources/bindingService";
-import { BindingEntry, BindingSnapshot } from "../types";
+import { BindingService } from "../bindingService";
+import { BindingEntry, BindingSnapshot } from "../../config/domain/models";
 
 class FakeConfigurationService {
   snapshot: BindingSnapshot;

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { BindingEntry, EnvironmentConfig } from "../../types";
+import { BindingEntry, EnvironmentConfig } from "../config/domain/models";
 import { DataverseClient, isDefaultSolution } from "../dataverse/dataverseClient";
 import {
   EnvironmentAuthContext,

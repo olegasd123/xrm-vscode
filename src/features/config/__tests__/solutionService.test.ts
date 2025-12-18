@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import test from "node:test";
 import * as vscode from "vscode";
-import { SolutionPicker } from "../platform/vscode/ui/solutionPicker";
+import { SolutionPicker } from "../../../platform/vscode/ui/solutionPicker";
 
 test("pickEnvironment shows error and returns undefined when list is empty", async () => {
   const ui = new SolutionPicker();

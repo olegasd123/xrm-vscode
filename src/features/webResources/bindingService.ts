@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { BindingEntry, BindingSnapshot } from "../../types";
+import { BindingEntry, BindingSnapshot } from "../config/domain/models";
 import { ConfigurationService } from "../config/configurationService";
 
 export class BindingService {

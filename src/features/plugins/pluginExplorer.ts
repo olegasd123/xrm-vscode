@@ -5,7 +5,7 @@ import { DataverseClient, isDefaultSolution } from "../dataverse/dataverseClient
 import { SolutionComponentService } from "../dataverse/solutionComponentService";
 import { PluginService } from "./pluginService";
 import { PluginAssembly, PluginImage, PluginStep, PluginType } from "./models";
-import { EnvironmentConfig, SolutionConfig } from "../../types";
+import { EnvironmentConfig, SolutionConfig } from "../config/domain/models";
 
 const SOLUTION_FILTER_STATE_KEY = "d365Tools.plugins.filterConfiguredSolutions";
 const SOLUTION_FILTER_CONTEXT_KEY = "d365Tools.plugins.filterConfiguredSolutions";

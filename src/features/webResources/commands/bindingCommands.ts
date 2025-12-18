@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { CommandContext } from "../../../app/commandContext";
-import { BindingEntry } from "../../../types";
+import { BindingEntry } from "../../config/domain/models";
 import { resolveTargetUri } from "../../../platform/vscode/commandUtils";
 
 export async function addBinding(ctx: CommandContext, uri: vscode.Uri | undefined): Promise<void> {

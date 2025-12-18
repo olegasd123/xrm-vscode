@@ -1,1 +1,1 @@
-export const DEFAULT_SOLUTION_NAME = "Default";
+export { DEFAULT_SOLUTION_NAME } from "../../shared/solutions";

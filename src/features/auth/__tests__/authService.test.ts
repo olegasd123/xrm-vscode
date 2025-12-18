@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import test from "node:test";
 import * as vscode from "vscode";
-import { AuthService } from "../features/auth/authService";
+import { AuthService } from "../authService";
 
 test("getAccessToken requests scope built from resource when provided", async () => {
   const auth = new AuthService();
