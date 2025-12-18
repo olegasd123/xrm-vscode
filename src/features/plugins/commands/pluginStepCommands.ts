@@ -45,11 +45,9 @@ export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNod
   const messageName = await pickMessageName(service);
   if (!messageName) return;
 
-  const primaryEntity = await vscode.window.showInputBox({
-    prompt: "Primary entity logical name (leave blank for global message)",
-    placeHolder: "account",
-    ignoreFocusOut: true,
-  });
+  const primaryEntityPick = await pickPrimaryEntity(service);
+  if (primaryEntityPick.cancelled) return;
+  const primaryEntity = primaryEntityPick.value;
 
   const stage = await pickStage();
   if (stage === undefined) return;
@@ -126,11 +124,9 @@ export async function editPluginStep(ctx: CommandContext, node?: PluginStepNode)
   const messageName = await pickMessageName(service, node.step.messageName ?? "Create");
   if (!messageName) return;
 
-  const primaryEntity = await vscode.window.showInputBox({
-    prompt: "Primary entity logical name (leave blank for global message)",
-    value: node.step.primaryEntity ?? "",
-    ignoreFocusOut: true,
-  });
+  const primaryEntityPick = await pickPrimaryEntity(service, node.step.primaryEntity);
+  if (primaryEntityPick.cancelled) return;
+  const primaryEntity = primaryEntityPick.value;
 
   const stage = await pickStage(node.step.stage);
   if (stage === undefined) return;
@@ -475,6 +471,9 @@ function buildStepDefaultName(
 
 type MessagePickItem = vscode.QuickPickItem & { isCustom?: boolean };
 
+type PrimaryEntityPick = { value?: string; cancelled: boolean };
+type PrimaryEntityPickItem = vscode.QuickPickItem & { type: "entity" | "custom" | "none" };
+
 async function pickMessageName(
   service: PluginService,
   defaultValue = "Create",
@@ -533,6 +532,83 @@ async function promptForMessageName(defaultValue: string): Promise<string | unde
     value: defaultValue,
     ignoreFocusOut: true,
   });
+}
+
+async function pickPrimaryEntity(
+  service: PluginService,
+  defaultValue?: string,
+): Promise<PrimaryEntityPick> {
+  let entities: string[] = [];
+  try {
+    entities = await service.listEntityLogicalNames();
+  } catch (error) {
+    void vscode.window.showWarningMessage(
+      `Unable to load entities. Enter a logical name manually. ${String(error)}`,
+    );
+    return promptForPrimaryEntity(defaultValue);
+  }
+
+  if (!entities.length) {
+    return promptForPrimaryEntity(defaultValue);
+  }
+
+  const deduped = Array.from(new Set(entities)).sort((a, b) => a.localeCompare(b));
+  const items: PrimaryEntityPickItem[] = [
+    {
+      label: "Global message (no primary entity)",
+      description: "Use for messages without a primary entity",
+      type: "none",
+      picked: !defaultValue,
+    },
+    ...deduped.map((name) => ({
+      label: name,
+      type: "entity" as const,
+      picked: name === defaultValue,
+    })),
+  ];
+
+  if (defaultValue && !deduped.includes(defaultValue)) {
+    items.splice(1, 0, {
+      label: defaultValue,
+      description: "Current value",
+      type: "entity",
+      picked: true,
+    });
+  }
+
+  items.push({
+    label: "Enter custom logical name...",
+    description: "Type a logical name manually",
+    type: "custom",
+  });
+
+  const selection = await vscode.window.showQuickPick(items, {
+    placeHolder: "Select primary entity or choose global message",
+    matchOnDescription: true,
+    ignoreFocusOut: true,
+  });
+
+  if (!selection) return { value: undefined, cancelled: true };
+
+  const type = (selection as PrimaryEntityPickItem).type;
+  if (type === "none") return { value: undefined, cancelled: false };
+  if (type === "custom") return promptForPrimaryEntity(defaultValue);
+
+  return { value: selection.label, cancelled: false };
+}
+
+async function promptForPrimaryEntity(defaultValue?: string): Promise<PrimaryEntityPick> {
+  const value = await vscode.window.showInputBox({
+    prompt: "Primary entity logical name (leave blank for global message)",
+    placeHolder: "account",
+    value: defaultValue ?? "",
+    ignoreFocusOut: true,
+  });
+  if (value === undefined) {
+    return { value: undefined, cancelled: true };
+  }
+  const trimmed = value.trim();
+  return { value: trimmed || undefined, cancelled: false };
 }
 
 async function pickStage(defaultStage?: number): Promise<number | undefined> {

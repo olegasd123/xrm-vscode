@@ -255,6 +255,31 @@ export class PluginService {
     return Array.from(new Set(names));
   }
 
+  async listEntityLogicalNames(): Promise<string[]> {
+    const names: string[] = [];
+    type EntityListResponse = {
+      value?: Array<{ LogicalName?: string }>;
+      "@odata.nextLink"?: string;
+    };
+
+    let nextUrl:
+      | string
+      | undefined =
+        "/EntityDefinitions?$select=LogicalName";
+
+    while (nextUrl) {
+      const response: EntityListResponse = await this.client.get<EntityListResponse>(nextUrl);
+      names.push(
+        ...(response.value ?? [])
+          .map((item) => item.LogicalName)
+          .filter((name): name is string => Boolean(name)),
+      );
+      nextUrl = response["@odata.nextLink"];
+    }
+
+    return Array.from(new Set(names));
+  }
+
   async findAssemblyByName(name: string): Promise<PluginAssembly | undefined> {
     const escapedName = name.replace(/'/g, "''");
     const filter = encodeURIComponent(`name eq '${escapedName}'`);
