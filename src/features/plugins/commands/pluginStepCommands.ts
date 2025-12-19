@@ -295,11 +295,12 @@ export async function createPluginImage(ctx: CommandContext, node?: PluginStepNo
   });
   if (!messagePropertyName) return;
 
-  const attributes = await vscode.window.showInputBox({
-    prompt: "Attributes (comma-separated, optional)",
-    placeHolder: "name,emailaddress1",
-    ignoreFocusOut: true,
-  });
+  const attributesPick = await pickFilteringAttributes(
+    service,
+    node.step.primaryEntity ?? undefined,
+  );
+  if (attributesPick.cancelled) return;
+  const attributes = attributesPick.value;
 
   const name = await vscode.window.showInputBox({
     prompt: "Image name",
@@ -362,11 +363,13 @@ export async function editPluginImage(ctx: CommandContext, node?: PluginImageNod
   });
   if (!messagePropertyName) return;
 
-  const attributes = await vscode.window.showInputBox({
-    prompt: "Attributes (comma-separated, optional)",
-    value: node.image.attributes ?? "",
-    ignoreFocusOut: true,
-  });
+  const attributesPick = await pickFilteringAttributes(
+    service,
+    node.step.primaryEntity ?? undefined,
+    node.image.attributes ?? "",
+  );
+  if (attributesPick.cancelled) return;
+  const attributes = attributesPick.value;
 
   const name = await vscode.window.showInputBox({
     prompt: "Image name",
