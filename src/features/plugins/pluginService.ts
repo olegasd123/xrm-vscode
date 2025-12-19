@@ -284,7 +284,7 @@ export class PluginService {
 
     const escapedEntity = entityLogicalName.replace(/'/g, "''");
     let nextUrl: string | undefined =
-      `/EntityDefinitions(LogicalName='${escapedEntity}')/Attributes?$select=LogicalName&$top=500`;
+      `/EntityDefinitions(LogicalName='${escapedEntity}')/Attributes?$select=LogicalName`;
 
     while (nextUrl) {
       const response: AttributeListResponse = await this.client.get<AttributeListResponse>(nextUrl);
