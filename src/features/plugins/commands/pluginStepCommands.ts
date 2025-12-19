@@ -279,7 +279,7 @@ export async function createPluginImage(ctx: CommandContext, node?: PluginStepNo
   );
   if (!service) return;
 
-  const type = await pickImageType();
+  const type = await pickImageType(node.step);
   if (type === undefined) return;
 
   const entityAlias = await vscode.window.showInputBox({
@@ -347,7 +347,7 @@ export async function editPluginImage(ctx: CommandContext, node?: PluginImageNod
   );
   if (!service) return;
 
-  const type = await pickImageType(node.image.type);
+  const type = await pickImageType(node.step, node.image.type);
   if (type === undefined) return;
 
   const entityAlias = await vscode.window.showInputBox({
@@ -740,14 +740,15 @@ async function pickMode(defaultMode?: number): Promise<number | undefined> {
   return pick?.value;
 }
 
-async function pickImageType(defaultType?: number): Promise<number | undefined> {
-  const options = [
-    { label: "Pre-image", value: 0 },
-    { label: "Post-image", value: 1 },
-    { label: "Both", value: 2 },
-  ];
+async function pickImageType(step: PluginStep, defaultType?: number): Promise<number | undefined> {
+  const options = getImageTypeOptions(step);
   const pick = await vscode.window.showQuickPick(
-    options.map((o) => ({ label: o.label, value: o.value, picked: o.value === defaultType })),
+    options.map((o) => ({
+      label: o.label,
+      description: o.description,
+      value: o.value,
+      picked: o.value === defaultType,
+    })),
     { placeHolder: "Select image type" },
   );
   return pick?.value;
@@ -759,6 +760,23 @@ function getDefaultMessagePropertyName(step: PluginStep): string {
     return "Id";
   }
   return "Target";
+}
+
+function getImageTypeOptions(
+  step: PluginStep,
+): Array<{ label: string; value: number; description?: string }> {
+  const message = step.messageName?.toLowerCase();
+  if (message === "create") {
+    return [{ label: "Post-image", value: 1, description: "Create supports post-images only" }];
+  }
+  if (message === "delete") {
+    return [{ label: "Pre-image", value: 0, description: "Delete supports pre-images only" }];
+  }
+  return [
+    { label: "Pre-image", value: 0 },
+    { label: "Post-image", value: 1 },
+    { label: "Both", value: 2 },
+  ];
 }
 
 async function setPluginStepState(
