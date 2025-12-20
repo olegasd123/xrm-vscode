@@ -19,6 +19,12 @@ import { SolutionComponentService } from "../../dataverse/solutionComponentServi
 import { PluginService } from "../pluginService";
 import { PluginStep } from "../models";
 
+type MessagePickItem = vscode.QuickPickItem & { isCustom?: boolean };
+type PrimaryEntityPick = { value?: string; cancelled: boolean };
+type PrimaryEntityPickItem = vscode.QuickPickItem & { type: "entity" | "custom" | "none" };
+type FilteringAttributesPick = { value?: string; cancelled: boolean };
+type FilteringPickItem = vscode.QuickPickItem & { pickType: "attribute" | "custom" };
+
 export async function createPluginStep(ctx: CommandContext, node?: PluginTypeNode): Promise<void> {
   const { configuration, ui, secrets, auth, lastSelection, connections, pluginExplorer } = ctx;
   const explorer = pluginExplorer;
@@ -475,13 +481,6 @@ function buildStepDefaultName(
   const entityLabel = entity || "global";
   return `(Step) ${typeName}: ${message} of ${entityLabel}`;
 }
-
-type MessagePickItem = vscode.QuickPickItem & { isCustom?: boolean };
-
-type PrimaryEntityPick = { value?: string; cancelled: boolean };
-type PrimaryEntityPickItem = vscode.QuickPickItem & { type: "entity" | "custom" | "none" };
-type FilteringAttributesPick = { value?: string; cancelled: boolean };
-type FilteringPickItem = vscode.QuickPickItem & { pickType: "attribute" | "custom" };
 
 async function pickMessageName(
   service: PluginService,

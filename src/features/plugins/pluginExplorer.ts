@@ -17,6 +17,76 @@ export type PluginExplorerNode =
   | PluginStepNode
   | PluginImageNode;
 
+export class EnvironmentNode extends vscode.TreeItem {
+  constructor(readonly env: EnvironmentConfig) {
+    super(env.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.contextValue = "d365PluginEnvironment";
+    this.description = env.url;
+    this.iconPath = new vscode.ThemeIcon("globe");
+  }
+}
+
+export class PluginAssemblyNode extends vscode.TreeItem {
+  readonly contextValue = "d365PluginAssembly";
+
+  constructor(
+    readonly env: EnvironmentConfig,
+    readonly assembly: PluginAssembly,
+  ) {
+    super(assembly.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.description = `[${assembly.version}] ${formatDateTimeWithoutSeconds(assembly.modifiedOn)}`;
+    this.tooltip = buildAssemblyTooltip(assembly);
+    this.iconPath = new vscode.ThemeIcon("package");
+  }
+}
+
+export class PluginTypeNode extends vscode.TreeItem {
+  readonly contextValue = "d365PluginType";
+
+  constructor(
+    readonly env: EnvironmentConfig,
+    readonly pluginType: PluginType,
+  ) {
+    super(pluginType.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.tooltip = buildTypeTooltip(pluginType);
+    this.iconPath = new vscode.ThemeIcon("symbol-class");
+  }
+}
+
+export class PluginStepNode extends vscode.TreeItem {
+  contextValue: string;
+
+  constructor(
+    readonly env: EnvironmentConfig,
+    readonly pluginType: PluginType,
+    readonly step: PluginStep,
+  ) {
+    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    super(pluginLabel, vscode.TreeItemCollapsibleState.Collapsed);
+    this.description = buildStepDescription(step);
+    this.tooltip = buildStepTooltip(pluginType, step);
+    this.iconPath = buildStepIcon(step);
+    this.contextValue = buildStepContextValue(step);
+  }
+}
+
+export class PluginImageNode extends vscode.TreeItem {
+  readonly contextValue = "d365PluginImage";
+
+  constructor(
+    readonly env: EnvironmentConfig,
+    readonly pluginType: PluginType,
+    readonly step: PluginStep,
+    readonly image: PluginImage,
+  ) {
+    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    super(pluginLabel, vscode.TreeItemCollapsibleState.None);
+    this.description = buildImageDescription(image);
+    this.tooltip = buildImageTooltip(pluginType, image);
+    this.iconPath = new vscode.ThemeIcon("file-media");
+  }
+}
+
 export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExplorerNode> {
   private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<
     PluginExplorerNode | undefined | void
@@ -211,76 +281,6 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
       SOLUTION_FILTER_CONTEXT_KEY,
       this.filterByConfiguredSolutions,
     );
-  }
-}
-
-export class EnvironmentNode extends vscode.TreeItem {
-  constructor(readonly env: EnvironmentConfig) {
-    super(env.name, vscode.TreeItemCollapsibleState.Collapsed);
-    this.contextValue = "d365PluginEnvironment";
-    this.description = env.url;
-    this.iconPath = new vscode.ThemeIcon("globe");
-  }
-}
-
-export class PluginAssemblyNode extends vscode.TreeItem {
-  readonly contextValue = "d365PluginAssembly";
-
-  constructor(
-    readonly env: EnvironmentConfig,
-    readonly assembly: PluginAssembly,
-  ) {
-    super(assembly.name, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = `[${assembly.version}] ${formatDateTimeWithoutSeconds(assembly.modifiedOn)}`;
-    this.tooltip = buildAssemblyTooltip(assembly);
-    this.iconPath = new vscode.ThemeIcon("package");
-  }
-}
-
-export class PluginTypeNode extends vscode.TreeItem {
-  readonly contextValue = "d365PluginType";
-
-  constructor(
-    readonly env: EnvironmentConfig,
-    readonly pluginType: PluginType,
-  ) {
-    super(pluginType.name, vscode.TreeItemCollapsibleState.Collapsed);
-    this.tooltip = buildTypeTooltip(pluginType);
-    this.iconPath = new vscode.ThemeIcon("symbol-class");
-  }
-}
-
-export class PluginStepNode extends vscode.TreeItem {
-  contextValue: string;
-
-  constructor(
-    readonly env: EnvironmentConfig,
-    readonly pluginType: PluginType,
-    readonly step: PluginStep,
-  ) {
-    const pluginLabel = pluginType.typeName ?? pluginType.name;
-    super(pluginLabel, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = buildStepDescription(step);
-    this.tooltip = buildStepTooltip(pluginType, step);
-    this.iconPath = buildStepIcon(step);
-    this.contextValue = buildStepContextValue(step);
-  }
-}
-
-export class PluginImageNode extends vscode.TreeItem {
-  readonly contextValue = "d365PluginImage";
-
-  constructor(
-    readonly env: EnvironmentConfig,
-    readonly pluginType: PluginType,
-    readonly step: PluginStep,
-    readonly image: PluginImage,
-  ) {
-    const pluginLabel = pluginType.typeName ?? pluginType.name;
-    super(pluginLabel, vscode.TreeItemCollapsibleState.None);
-    this.description = buildImageDescription(image);
-    this.tooltip = buildImageTooltip(pluginType, image);
-    this.iconPath = new vscode.ThemeIcon("file-media");
   }
 }
 
