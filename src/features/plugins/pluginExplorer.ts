@@ -79,7 +79,7 @@ export class PluginImageNode extends vscode.TreeItem {
     readonly step: PluginStep,
     readonly image: PluginImage,
   ) {
-    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    const pluginLabel = image.name ?? pluginType.typeName ?? pluginType.name;
     super(pluginLabel, vscode.TreeItemCollapsibleState.None);
     this.description = buildImageDescription(image);
     this.tooltip = buildImageTooltip(pluginType, image);
@@ -351,9 +351,11 @@ function buildStepContextValue(step: PluginStep): string {
 }
 
 function buildImageDescription(image: PluginImage): string | undefined {
-  const type = formatImageType(image.type);
-  const alias = image.entityAlias;
-  const segments = [alias, type].filter(Boolean);
+  const segments =
+    image.attributes
+      ?.slice()
+      .split(",")
+      .map((attr) => attr.trim()) || [];
   return segments.join(" • ") || undefined;
 }
 
