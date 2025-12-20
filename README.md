@@ -103,6 +103,10 @@ File bindings win over folder bindings when both cover the same file.
 - Quick publish: click the status bar item (cloud upload) or run `Dynamics 365 Tools: Publish Last Resource` to republish the most recent file or folder with the same environment and binding.
 - Open a published web resource in classic CRM: right-click the bound file → `Dynamics 365 Tools` → `Open in Power Apps`, choose the environment, and the extension opens the classic web resource editor URL for that solution and resource.
 
+### Resources supported file types
+
+Supported: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. The Explorer `Dynamics 365 Tools` menu is visible on those types or folder.
+
 ### Manage plugins
 
 - Open the **Dynamics 365 Plugins** view in the Explorer to browse assemblies → plugin types → steps → images for any configured environment.
@@ -111,8 +115,8 @@ File bindings win over folder bindings when both cover the same file.
   - `Dynamics 365 Tools: Register Plugin Assembly` uploads a `.dll` to the selected environment and adds it to your chosen solution.
   - `Dynamics 365 Tools: Update Plugin Assembly` replaces the content of an existing assembly with a new `.dll`.
   - Plugin classes are auto-discovered via `System.Reflection.MetadataLoadContext` when you register or update an assembly. New plugin types are created (respecting `createMissingComponents`), existing ones are updated, and types removed from the assembly are deleted in Dataverse.
-  - Use the trash icon next to a plugin type in the Plugins explorer to remove it (steps/images are deleted with the type).
-
-### Supported file types
-
-Supported: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. The Explorer `Dynamics 365 Tools` menu is visible on those types or folder.
+  - Use the trash icon next to a plugin type in the Plugins explorer to remove it (steps and images are deleted with the type).
+- Step and image commands (context menu or palette):
+  - Create/edit/enable/disable/delete plugin steps; creation prompts for message, entity, stage, mode, rank, attributes, and solution. Deleting a step now also deletes all of its images first.
+  - Create/edit/delete plugin images for a step; defaults include sensible aliases and message property names.
+- Toggle “Show Configured Solutions Only” in the Plugins view title to filter plugin assemblies/types by the solutions listed in your config (skipping the default solution automatically).
