@@ -12,8 +12,11 @@ import {
 import { DataverseClient } from "../../dataverse/dataverseClient";
 import { SolutionComponentService } from "../../dataverse/solutionComponentService";
 import { PluginService } from "../pluginService";
-import { PluginAssemblyNode } from "../pluginExplorer";
+import { PluginAssemblyNode, PluginExplorerProvider } from "../pluginExplorer";
 import { PluginRegistrationManager, PluginSyncResult } from "../pluginRegistrationManager";
+import { AssemblyStatusBarService } from "../../../platform/vscode/statusBar";
+import { LastSelectionService } from "../../../platform/vscode/lastSelectionStore";
+import { EnvironmentConfig } from "../../config/domain/models";
 
 const execFileAsync = promisify(execFile);
 
@@ -27,6 +30,7 @@ export async function registerPluginAssembly(ctx: CommandContext): Promise<void>
     connections,
     pluginRegistration,
     pluginExplorer,
+    assemblyStatusBar,
   } = ctx;
   const config = await configuration.loadConfiguration();
   const selection = await pickEnvironmentAndAuth(
@@ -104,6 +108,13 @@ export async function registerPluginAssembly(ctx: CommandContext): Promise<void>
       );
     }
 
+    await lastSelection.setLastAssemblyDllPath(selection.env.name, assemblyId, assemblyPath);
+    assemblyStatusBar.setLastPublish({
+      assemblyId,
+      assemblyName: name,
+      assemblyUri: vscode.Uri.file(assemblyPath),
+      environment: selection.env,
+    });
     vscode.window.showInformationMessage(
       buildAssemblySuccessMessage(name, selection.env.name, pluginSummary),
     );
@@ -126,6 +137,7 @@ export async function updatePluginAssembly(
     connections,
     pluginRegistration,
     pluginExplorer,
+    assemblyStatusBar,
   } = ctx;
   const config = await configuration.loadConfiguration();
 
@@ -217,36 +229,103 @@ export async function updatePluginAssembly(
     return;
   }
 
-  const selectedPath = assemblyFile[0].fsPath;
-  const content = await vscode.workspace.fs.readFile(assemblyFile[0]);
-  const contentBase64 = Buffer.from(content).toString("base64");
+  const assemblyUri = assemblyFile[0];
+  const allowCreate = env.createMissingComponents === true;
 
   try {
-    await service.updateAssembly(assemblyId, contentBase64);
-    await lastSelection.setLastAssemblyDllPath(env.name, assemblyId, selectedPath);
-    let pluginSummary: string | undefined;
-    try {
-      const syncResult = await syncPluginsForAssembly({
-        registration: pluginRegistration,
-        pluginService: service,
-        assemblyId,
-        assemblyPath: selectedPath,
-        solutionName: undefined,
-        allowCreate: env.createMissingComponents === true,
-      });
-      pluginSummary = syncResult;
-    } catch (syncError) {
-      void vscode.window.showErrorMessage(
-        `Assembly updated, but plugins failed to sync: ${String(syncError)}`,
-      );
-    }
-
-    vscode.window.showInformationMessage(
-      buildAssemblySuccessMessage(assemblyName, env.name, pluginSummary, "updated"),
-    );
-    pluginExplorer?.refresh();
+    await updateAssemblyFromUri({
+      assemblyId,
+      assemblyName,
+      assemblyUri,
+      env,
+      allowCreate,
+      pluginService: service,
+      pluginRegistration,
+      pluginExplorer,
+      assemblyStatusBar,
+      lastSelection,
+    });
   } catch (error) {
     void vscode.window.showErrorMessage(`Failed to update plugin assembly: ${String(error)}`);
+  }
+}
+
+export async function publishLastPluginAssembly(ctx: CommandContext): Promise<void> {
+  const {
+    configuration,
+    ui,
+    secrets,
+    auth,
+    lastSelection,
+    connections,
+    pluginRegistration,
+    pluginExplorer,
+    assemblyStatusBar,
+  } = ctx;
+
+  const last = assemblyStatusBar.getLastPublish();
+  if (!last) {
+    vscode.window.showInformationMessage(
+      "Publish a plugin assembly first to enable quick publish.",
+    );
+    return;
+  }
+
+  try {
+    await vscode.workspace.fs.stat(last.assemblyUri);
+  } catch {
+    vscode.window.showWarningMessage("Last published plugin assembly no longer exists.");
+    assemblyStatusBar.clear();
+    return;
+  }
+
+  const config = await configuration.loadConfiguration();
+  const selection = await pickEnvironmentAndAuth(
+    configuration,
+    ui,
+    secrets,
+    auth,
+    lastSelection,
+    config,
+    last.environment.name,
+    { placeHolder: "Select environment to publish plugin assembly" },
+  );
+  if (!selection) {
+    return;
+  }
+
+  const confirmed = await confirmAssemblyPublish(
+    last.assemblyUri,
+    selection.env,
+    last.assemblyName,
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  let service: PluginService;
+  try {
+    service = await createPluginService(connections, selection.auth, selection.env);
+  } catch (error) {
+    void vscode.window.showErrorMessage(String(error));
+    return;
+  }
+
+  try {
+    await updateAssemblyFromUri({
+      assemblyId: last.assemblyId,
+      assemblyName: last.assemblyName,
+      assemblyUri: last.assemblyUri,
+      env: selection.env,
+      allowCreate: selection.env.createMissingComponents === true,
+      pluginService: service,
+      pluginRegistration,
+      pluginExplorer,
+      assemblyStatusBar,
+      lastSelection,
+    });
+  } catch (error) {
+    void vscode.window.showErrorMessage(`Failed to publish plugin assembly: ${String(error)}`);
   }
 }
 
@@ -413,6 +492,73 @@ async function syncPluginsForAssembly(context: PluginSyncContext): Promise<strin
   );
 
   return formatPluginSyncResult(result, context.allowCreate);
+}
+
+type AssemblyUpdateContext = {
+  assemblyId: string;
+  assemblyName?: string;
+  assemblyUri: vscode.Uri;
+  env: EnvironmentConfig;
+  allowCreate: boolean;
+  pluginService: PluginService;
+  pluginRegistration: PluginRegistrationManager;
+  pluginExplorer?: PluginExplorerProvider;
+  assemblyStatusBar: AssemblyStatusBarService;
+  lastSelection: LastSelectionService;
+};
+
+async function updateAssemblyFromUri(context: AssemblyUpdateContext): Promise<void> {
+  const content = await vscode.workspace.fs.readFile(context.assemblyUri);
+  const contentBase64 = Buffer.from(content).toString("base64");
+
+  await context.pluginService.updateAssembly(context.assemblyId, contentBase64);
+  await context.lastSelection.setLastAssemblyDllPath(
+    context.env.name,
+    context.assemblyId,
+    context.assemblyUri.fsPath,
+  );
+
+  let pluginSummary: string | undefined;
+  try {
+    pluginSummary = await syncPluginsForAssembly({
+      registration: context.pluginRegistration,
+      pluginService: context.pluginService,
+      assemblyId: context.assemblyId,
+      assemblyPath: context.assemblyUri.fsPath,
+      solutionName: undefined,
+      allowCreate: context.allowCreate,
+    });
+  } catch (syncError) {
+    void vscode.window.showErrorMessage(
+      `Assembly updated, but plugins failed to sync: ${String(syncError)}`,
+    );
+  }
+
+  context.assemblyStatusBar.setLastPublish({
+    assemblyId: context.assemblyId,
+    assemblyName: context.assemblyName,
+    assemblyUri: context.assemblyUri,
+    environment: context.env,
+  });
+  vscode.window.showInformationMessage(
+    buildAssemblySuccessMessage(context.assemblyName, context.env.name, pluginSummary, "updated"),
+  );
+  context.pluginExplorer?.refresh();
+}
+
+async function confirmAssemblyPublish(
+  assemblyUri: vscode.Uri,
+  env: EnvironmentConfig,
+  assemblyName?: string,
+): Promise<boolean> {
+  const relative = vscode.workspace.asRelativePath(assemblyUri, false);
+  const displayName = assemblyName ?? path.basename(assemblyUri.fsPath);
+  const choice = await vscode.window.showWarningMessage(
+    `Publish ${displayName} (${relative}) to ${env.name}?`,
+    { modal: true },
+    "Publish",
+  );
+  return choice === "Publish";
 }
 
 function formatPluginSyncResult(

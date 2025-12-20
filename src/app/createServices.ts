@@ -11,7 +11,7 @@ import { PublishCacheService } from "../features/webResources/publishCacheServic
 import { WebResourcePublisher } from "../features/webResources/webResourcePublisher";
 import { WebResourceUrlService } from "../features/webResources/webResourceUrlService";
 import { LastSelectionService } from "../platform/vscode/lastSelectionStore";
-import { StatusBarService } from "../platform/vscode/statusBar";
+import { AssemblyStatusBarService, StatusBarService } from "../platform/vscode/statusBar";
 import { SolutionPicker } from "../platform/vscode/ui/solutionPicker";
 import { CommandContext } from "./commandContext";
 
@@ -42,6 +42,9 @@ export async function createServices(
   await pluginExplorer.initialize();
 
   const statusBar = new StatusBarService("dynamics365Tools.publishLastResource");
+  const assemblyStatusBar = new AssemblyStatusBarService(
+    "dynamics365Tools.plugins.publishLastAssembly",
+  );
 
   return {
     extensionContext,
@@ -58,5 +61,6 @@ export async function createServices(
     pluginExplorer,
     pluginRegistration,
     statusBar,
+    assemblyStatusBar,
   };
 }

@@ -50,6 +50,7 @@
     "onCommand:dynamics365Tools.plugins.enableSolutionFilter",
     "onCommand:dynamics365Tools.plugins.disableSolutionFilter",
     "onCommand:dynamics365Tools.plugins.refreshExplorer",
+    "onCommand:dynamics365Tools.plugins.publishLastAssembly",
     "onCommand:dynamics365Tools.publishLastResource",
     "onStartupFinished"
   ],
@@ -112,6 +113,12 @@
         "title": "Update Plugin Assembly",
         "category": "Dynamics 365 Tools",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.publishLastAssembly",
+        "title": "Publish Last Plugin Assembly",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(package)"
       },
       {
         "command": "dynamics365Tools.plugins.deletePluginType",
@@ -264,6 +271,9 @@
         },
         {
           "command": "dynamics365Tools.plugins.updateAssembly"
+        },
+        {
+          "command": "dynamics365Tools.plugins.publishLastAssembly"
         },
         {
           "command": "dynamics365Tools.plugins.deletePluginType"

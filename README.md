@@ -8,7 +8,7 @@ Publish Dynamics 365 web resources straight from VS Code. Bind local files or fo
 - Reuse the same bindings across the team via `.vscode/dynamics365tools.bindings.json`.
 - Speed up folder publishes with caching, parallel uploads, and cancellation support.
 - Keep credentials safe (Secret Storage) while still supporting client secrets.
-- See a quick status bar shortcut to republish the last resource in seconds.
+- See quick status bar shortcuts to republish the last resource or plugin assembly in seconds.
 
 ### Main features
 

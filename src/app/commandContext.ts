@@ -10,7 +10,7 @@ import type { PublishCacheService } from "../features/webResources/publishCacheS
 import type { WebResourcePublisher } from "../features/webResources/webResourcePublisher";
 import type { WebResourceUrlService } from "../features/webResources/webResourceUrlService";
 import type { LastSelectionService } from "../platform/vscode/lastSelectionStore";
-import type { StatusBarService } from "../platform/vscode/statusBar";
+import type { AssemblyStatusBarService, StatusBarService } from "../platform/vscode/statusBar";
 import type { SolutionPicker } from "../platform/vscode/ui/solutionPicker";
 
 export interface CommandContext {
@@ -34,4 +34,5 @@ export interface CommandContext {
   pluginRegistration: PluginRegistrationManager;
 
   statusBar: StatusBarService;
+  assemblyStatusBar: AssemblyStatusBarService;
 }

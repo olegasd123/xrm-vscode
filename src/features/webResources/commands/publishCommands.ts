@@ -10,7 +10,11 @@ import { EnvironmentConnectionService } from "../../dataverse/environmentConnect
 import { StatusBarService } from "../../../platform/vscode/statusBar";
 import { LastSelectionService } from "../../../platform/vscode/lastSelectionStore";
 import { PublishCacheService } from "../publishCacheService";
-import { BindingEntry, Dynamics365Configuration } from "../../config/domain/models";
+import {
+  BindingEntry,
+  Dynamics365Configuration,
+  EnvironmentConfig,
+} from "../../config/domain/models";
 import { resolveTargetUri, pickEnvironmentAndAuth } from "../../../platform/vscode/commandUtils";
 import { addBinding } from "./bindingCommands";
 import {
@@ -70,6 +74,7 @@ export async function publishLastResource(ctx: CommandContext): Promise<void> {
       publishCache,
       config,
       preferredEnvName,
+      (env) => confirmPublishTarget(last.targetUri, env, true),
     );
     return;
   }
@@ -87,6 +92,7 @@ export async function publishLastResource(ctx: CommandContext): Promise<void> {
     publishCache,
     config,
     preferredEnvName,
+    (env) => confirmPublishTarget(last.targetUri, env, false),
   );
 }
 
@@ -247,6 +253,7 @@ async function publishFlow(
   publishCache: PublishCacheService,
   config?: Dynamics365Configuration,
   preferredEnvName?: string,
+  confirmPublish?: (env: EnvironmentConfig) => Promise<boolean>,
 ) {
   const publishAuth = await pickEnvironmentAndAuth(
     configuration,
@@ -258,6 +265,10 @@ async function publishFlow(
     preferredEnvName,
   );
   if (!publishAuth) {
+    return;
+  }
+
+  if (confirmPublish && !(await confirmPublish(publishAuth.env))) {
     return;
   }
 
@@ -289,6 +300,7 @@ async function publishFolder(
   publishCache: PublishCacheService,
   config?: Dynamics365Configuration,
   preferredEnvName?: string,
+  confirmPublish?: (env: EnvironmentConfig) => Promise<boolean>,
 ): Promise<void> {
   const files = await collectSupportedFiles(folderUri, supportedExtensions);
   if (!files.length) {
@@ -306,6 +318,10 @@ async function publishFolder(
     preferredEnvName,
   );
   if (!publishAuth) {
+    return;
+  }
+
+  if (confirmPublish && !(await confirmPublish(publishAuth.env))) {
     return;
   }
 
@@ -381,4 +397,21 @@ async function publishFolder(
       }
     },
   );
+}
+
+function confirmPublishTarget(
+  targetUri: vscode.Uri,
+  env: EnvironmentConfig,
+  isFolder: boolean,
+): Promise<boolean> {
+  const relative = vscode.workspace.asRelativePath(targetUri, false);
+  const target = isFolder ? `${relative}/` : relative;
+  return (async () => {
+    const result = await vscode.window.showWarningMessage(
+      `Publish ${target} to ${env.name}?`,
+      { modal: true },
+      "Publish",
+    );
+    return result === "Publish";
+  })();
 }

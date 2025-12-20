@@ -15,6 +15,7 @@ import {
 import {
   generatePublicKeyToken,
   registerPluginAssembly,
+  publishLastPluginAssembly,
   updatePluginAssembly,
 } from "../features/plugins/commands/pluginCommands";
 import {
@@ -61,6 +62,9 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     vscode.commands.registerCommand("dynamics365Tools.signOut", () => signOut(ctx)),
     vscode.commands.registerCommand("dynamics365Tools.plugins.registerAssembly", () =>
       registerPluginAssembly(ctx),
+    ),
+    vscode.commands.registerCommand("dynamics365Tools.plugins.publishLastAssembly", () =>
+      publishLastPluginAssembly(ctx),
     ),
     vscode.commands.registerCommand("dynamics365Tools.plugins.updateAssembly", (node) =>
       updatePluginAssembly(ctx, node),
@@ -109,6 +113,7 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     ),
     vscode.window.registerTreeDataProvider("dynamics365Tools.pluginExplorer", ctx.pluginExplorer),
     ctx.statusBar,
+    ctx.assemblyStatusBar,
   );
 
   return disposables;
