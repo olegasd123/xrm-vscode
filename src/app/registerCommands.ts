@@ -21,6 +21,8 @@ import {
 import {
   createPluginImage,
   createPluginStep,
+  copyImageDescription,
+  copyStepDescription,
   deletePluginImage,
   deletePluginStep,
   disablePluginStep,
@@ -104,6 +106,12 @@ export function registerCommands(ctx: CommandContext): vscode.Disposable[] {
     ),
     vscode.commands.registerCommand("dynamics365Tools.plugins.createImage", (node) =>
       createPluginImage(ctx, node),
+    ),
+    vscode.commands.registerCommand("dynamics365Tools.plugins.copyStepDescription", (node) =>
+      copyStepDescription(node),
+    ),
+    vscode.commands.registerCommand("dynamics365Tools.plugins.copyImageDescription", (node) =>
+      copyImageDescription(node),
     ),
     vscode.commands.registerCommand("dynamics365Tools.plugins.editImage", (node) =>
       editPluginImage(ctx, node),

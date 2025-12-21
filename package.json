@@ -42,9 +42,11 @@
     "onCommand:dynamics365Tools.plugins.createStep",
     "onCommand:dynamics365Tools.plugins.editStep",
     "onCommand:dynamics365Tools.plugins.deleteStep",
+    "onCommand:dynamics365Tools.plugins.copyStepDescription",
     "onCommand:dynamics365Tools.plugins.createImage",
     "onCommand:dynamics365Tools.plugins.editImage",
     "onCommand:dynamics365Tools.plugins.deleteImage",
+    "onCommand:dynamics365Tools.plugins.copyImageDescription",
     "onCommand:dynamics365Tools.plugins.deletePluginType",
     "onCommand:dynamics365Tools.plugins.toggleSolutionFilter",
     "onCommand:dynamics365Tools.plugins.enableSolutionFilter",
@@ -163,6 +165,12 @@
         "icon": "$(add)"
       },
       {
+        "command": "dynamics365Tools.plugins.copyStepDescription",
+        "title": "Copy Step Info",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(copy)"
+      },
+      {
         "command": "dynamics365Tools.plugins.editStep",
         "title": "Edit Plugin Step",
         "category": "Dynamics 365 Tools",
@@ -191,6 +199,12 @@
         "title": "Create Plugin Image",
         "category": "Dynamics 365 Tools",
         "icon": "$(file-media)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.copyImageDescription",
+        "title": "Copy Plugin Image Info",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(copy)"
       },
       {
         "command": "dynamics365Tools.plugins.editImage",
@@ -353,29 +367,39 @@
           "group": "inline@2"
         },
         {
+          "command": "dynamics365Tools.plugins.copyStepDescription",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@0"
+        },
+        {
           "command": "dynamics365Tools.plugins.editStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
           "group": "inline@1"
         },
         {
+          "command": "dynamics365Tools.plugins.createImage",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@2"
+        },
+        {
           "command": "dynamics365Tools.plugins.enableStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep:disabled",
-          "group": "inline@2"
+          "group": "inline@3"
         },
         {
           "command": "dynamics365Tools.plugins.disableStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep:enabled",
-          "group": "inline@2"
-        },
-        {
-          "command": "dynamics365Tools.plugins.createImage",
-          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
           "group": "inline@3"
         },
         {
           "command": "dynamics365Tools.plugins.deleteStep",
           "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
           "group": "inline@4"
+        },
+        {
+          "command": "dynamics365Tools.plugins.copyImageDescription",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
+          "group": "inline@0"
         },
         {
           "command": "dynamics365Tools.plugins.editImage",

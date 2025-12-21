@@ -441,6 +441,46 @@ export async function deletePluginImage(
   }
 }
 
+export async function copyStepDescription(
+  node?: PluginStepNode,
+): Promise<void> {
+  if (!node) {
+    void vscode.window.showInformationMessage(
+      "Run this command from a plugin step in the Plugins explorer.",
+    );
+    return;
+  }
+
+  const tooltip = asTooltipString(node.tooltip);
+  if (!tooltip) {
+    void vscode.window.showInformationMessage("No step info to copy.");
+    return;
+  }
+
+  await vscode.env.clipboard.writeText(tooltip);
+  void vscode.window.showInformationMessage("Step info copied to clipboard.");
+}
+
+export async function copyImageDescription(
+  node?: PluginImageNode,
+): Promise<void> {
+  if (!node) {
+    void vscode.window.showInformationMessage(
+      "Run this command from a plugin image in the Plugins explorer.",
+    );
+    return;
+  }
+
+  const tooltip = asTooltipString(node.tooltip);
+  if (!tooltip) {
+    void vscode.window.showInformationMessage("No image info to copy.");
+    return;
+  }
+
+  await vscode.env.clipboard.writeText(tooltip);
+  void vscode.window.showInformationMessage("Image info copied to clipboard.");
+}
+
 async function resolveServiceForNode(
   placeHolder: string,
   configuration: ConfigurationService,
@@ -776,6 +816,16 @@ function getImageTypeOptions(
     { label: "Post-image", value: 1 },
     { label: "Both", value: 2 },
   ];
+}
+
+function asTooltipString(tooltip: string | vscode.MarkdownString | undefined): string | undefined {
+  if (!tooltip) return undefined;
+  if (typeof tooltip === "string") {
+    const trimmed = tooltip.trim();
+    return trimmed || undefined;
+  }
+  const value = tooltip.value?.trim();
+  return value || undefined;
 }
 
 async function setPluginStepState(
