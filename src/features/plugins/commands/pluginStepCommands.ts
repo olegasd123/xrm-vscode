@@ -820,12 +820,9 @@ function getImageTypeOptions(
 
 function asTooltipString(tooltip: string | vscode.MarkdownString | undefined): string | undefined {
   if (!tooltip) return undefined;
-  if (typeof tooltip === "string") {
-    const trimmed = tooltip.trim();
-    return trimmed || undefined;
-  }
-  const value = tooltip.value?.trim();
-  return value || undefined;
+  const raw = typeof tooltip === "string" ? tooltip : tooltip.value ?? "";
+  const cleaned = raw.replace(/\*\*/g, "").trim();
+  return cleaned || undefined;
 }
 
 async function setPluginStepState(
