@@ -8,7 +8,7 @@ Publish Dynamics 365 web resources straight from VS Code. Bind local files or fo
 - Reuse the same bindings across the team via `.vscode/dynamics365tools.bindings.json`.
 - Speed up folder publishes with caching, parallel uploads, and cancellation support.
 - Keep credentials safe (Secret Storage) while still supporting client secrets.
-- See a quick status bar shortcut to republish the last resource in seconds.
+- See quick status bar shortcuts to republish the last resource or plugin assembly in seconds.
 
 ### Main features
 
@@ -16,10 +16,12 @@ Publish Dynamics 365 web resources straight from VS Code. Bind local files or fo
 - **Solution-aware bindings** for files or folders saved in `.vscode/dynamics365tools.bindings.json`; file bindings override folder bindings when both exist.
 - **Explorer context menu** `Dynamics 365 Tools` → `Publish Resource` / `Bind Resource`; bound folders publish all supported files inside.
 - **Open in Power Apps** directly from the Explorer `Dynamics 365 Tools` menu to jump to the Web Resources list for the bound solution.
-- **Publish last resource** from the status bar (cloud icon) or via `Dynamics 365 Tools: Publish Last Resource`; remembers the last environment used.
+- **Publish last resource** from the status bar (file code icon) or via `Dynamics 365 Tools: Publish Last Resource`; remembers the last environment used.
 - **Folder publish extras**: up to 4 files publish in parallel, unchanged files are skipped using `.vscode/dynamics365tools.publishCache.json`, and you can cancel from the progress notification.
 - **Auth options**: interactive sign-in (default) or client credentials stored securely; per-environment `authType` control.
 - **Output channel logging** with clear summaries and a “copy error details” action when something fails.
+- **Plugin explorer & assemblies**: browse plugin assemblies, plugin types, steps, and images in VS Code. Register new assemblies or update existing ones directly from the explorer; plugins inside the assembly are auto-discovered and synced.
+  - Quick publish plugin assemblies from the status bar (package icon) or via `Dynamics 365 Tools: Publish Last Plugin Assembly`; reuses the last environment and assembly you uploaded.
 
 ### Install
 
@@ -36,14 +38,14 @@ Edit `.vscode/dynamics365tools.config.json` (or run `Dynamics 365 Tools: Edit En
       "name": "dev",
       "url": "https://your-dev.crm.dynamics.com",
       "authType": "interactive",
-      "createMissingWebResources": true,
+      "createMissingComponents": true,
     },
     {
       "name": "prod",
       "url": "https://your-prod.crm.dynamics.com",
       "authType": "clientSecret",
       "resource": "https://your-prod.crm.dynamics.com",
-      "createMissingWebResources": false,
+      "createMissingComponents": false,
       "userAgentEnabled": true,
       "userAgent": "Dynamics365Tools-VSCode",
     },
@@ -58,7 +60,7 @@ Edit `.vscode/dynamics365tools.config.json` (or run `Dynamics 365 Tools: Edit En
 Notes:
 
 - Set `resource` if the token audience is not the org URL. Turn on `userAgentEnabled` or set `userAgent` to add a custom header to every HTTP call.
-- `createMissingWebResources: false` blocks creation; publish will only update existing items for that environment.
+- `createMissingComponents: false` blocks creation; publish will only update existing web resources and will refuse new plugin assemblies for that environment.
 
 ### Authenticate
 
@@ -102,6 +104,21 @@ File bindings win over folder bindings when both cover the same file.
 - Quick publish: click the status bar item (cloud upload) or run `Dynamics 365 Tools: Publish Last Resource` to republish the most recent file or folder with the same environment and binding.
 - Open a published web resource in classic CRM: right-click the bound file → `Dynamics 365 Tools` → `Open in Power Apps`, choose the environment, and the extension opens the classic web resource editor URL for that solution and resource.
 
-### Supported file types
+### Resources supported file types
 
 Supported: `.js`, `.css`, `.htm`, `.html`, `.xml`, `.json`, `.resx`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.xsl`, `.xslt`, `.ico`, `.svg`. The Explorer `Dynamics 365 Tools` menu is visible on those types or folder.
+
+### Manage plugins
+
+- Open the **Dynamics 365 Plugins** view in the Explorer to browse assemblies → plugin types → steps → images for any configured environment.
+- Use the view title actions (refresh/register) or the Command Palette commands:
+  - `Dynamics 365 Tools: Generate Strong Name Key (Public Key Token)` creates a `.snk` using the local `sn` tool and shows the public key token for signing your assemblies.
+  - `Dynamics 365 Tools: Register Plugin Assembly` uploads a `.dll` to the selected environment and adds it to your chosen solution.
+  - `Dynamics 365 Tools: Update Plugin Assembly` replaces the content of an existing assembly with a new `.dll`.
+  - Plugin classes are auto-discovered via `System.Reflection.MetadataLoadContext` when you register or update an assembly. New plugin types are created (respecting `createMissingComponents`), existing ones are updated, and types removed from the assembly are deleted in Dataverse.
+  - Use the trash icon next to a plugin type in the Plugins explorer to remove it (steps and images are deleted with the type).
+- Step and image commands (context menu or palette):
+  - Create/edit/enable/disable/delete plugin steps; creation prompts for message, entity, stage, mode, rank, attributes, and solution. Deleting a step now also deletes all of its images first.
+  - Create/edit/delete plugin images for a step; defaults include sensible aliases and message property names.
+  - Copy plugin step/image info straight from the Plugins explorer inline actions to get the formatted details on your clipboard.
+- Toggle “Show Configured Solutions Only” in the Plugins view title to filter plugin assemblies/types by the solutions listed in your config (skipping the default solution automatically).

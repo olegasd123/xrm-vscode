@@ -4,11 +4,11 @@ node_modules/
 # Build output
 out/
 dist/
+**/bin
+**/obj
 
 # VS Code settings (keep project configs)
 .vscode/*
-!.vscode/xrm.config.json
-!.vscode/xrm.bindings.json
 !.vscode/launch.json
 !.vscode/tasks.json
 

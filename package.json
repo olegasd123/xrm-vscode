@@ -36,6 +36,23 @@
     "onCommand:dynamics365Tools.signInInteractive",
     "onCommand:dynamics365Tools.signOut",
     "onCommand:dynamics365Tools.setEnvironmentCredentials",
+    "onCommand:dynamics365Tools.plugins.registerAssembly",
+    "onCommand:dynamics365Tools.plugins.updateAssembly",
+    "onCommand:dynamics365Tools.plugins.generatePublicKeyToken",
+    "onCommand:dynamics365Tools.plugins.createStep",
+    "onCommand:dynamics365Tools.plugins.editStep",
+    "onCommand:dynamics365Tools.plugins.deleteStep",
+    "onCommand:dynamics365Tools.plugins.copyStepDescription",
+    "onCommand:dynamics365Tools.plugins.createImage",
+    "onCommand:dynamics365Tools.plugins.editImage",
+    "onCommand:dynamics365Tools.plugins.deleteImage",
+    "onCommand:dynamics365Tools.plugins.copyImageDescription",
+    "onCommand:dynamics365Tools.plugins.deletePluginType",
+    "onCommand:dynamics365Tools.plugins.toggleSolutionFilter",
+    "onCommand:dynamics365Tools.plugins.enableSolutionFilter",
+    "onCommand:dynamics365Tools.plugins.disableSolutionFilter",
+    "onCommand:dynamics365Tools.plugins.refreshExplorer",
+    "onCommand:dynamics365Tools.plugins.publishLastAssembly",
     "onCommand:dynamics365Tools.publishLastResource",
     "onStartupFinished"
   ],
@@ -86,6 +103,120 @@
         "command": "dynamics365Tools.signOut",
         "title": "Sign Out",
         "category": "Dynamics 365 Tools"
+      },
+      {
+        "command": "dynamics365Tools.plugins.registerAssembly",
+        "title": "Register Plugin Assembly",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.updateAssembly",
+        "title": "Update Plugin Assembly",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.publishLastAssembly",
+        "title": "Publish Last Plugin Assembly",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(package)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.deletePluginType",
+        "title": "Delete Plugin",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.refreshExplorer",
+        "title": "Refresh Plugin Explorer",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.toggleSolutionFilter",
+        "title": "Show Configured Solutions Only",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.enableSolutionFilter",
+        "title": "Show Configured Solutions Only",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.disableSolutionFilter",
+        "title": "Show Configured Solutions Only",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(filter-filled)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.generatePublicKeyToken",
+        "title": "Generate Strong Name Key (Public Key Token)",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(key)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.createStep",
+        "title": "Create Plugin Step",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(add)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.copyStepDescription",
+        "title": "Copy Step Info",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.editStep",
+        "title": "Edit Plugin Step",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.enableStep",
+        "title": "Enable Plugin Step",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.disableStep",
+        "title": "Disable Plugin Step",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(debug-pause)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.deleteStep",
+        "title": "Delete Plugin Step",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.createImage",
+        "title": "Create Plugin Image",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(file-media)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.copyImageDescription",
+        "title": "Copy Plugin Image Info",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.editImage",
+        "title": "Edit Plugin Image",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "dynamics365Tools.plugins.deleteImage",
+        "title": "Delete Plugin Image",
+        "category": "Dynamics 365 Tools",
+        "icon": "$(trash)"
       }
     ],
     "submenus": [
@@ -148,6 +279,155 @@
         },
         {
           "command": "dynamics365Tools.signOut"
+        },
+        {
+          "command": "dynamics365Tools.plugins.registerAssembly"
+        },
+        {
+          "command": "dynamics365Tools.plugins.updateAssembly"
+        },
+        {
+          "command": "dynamics365Tools.plugins.publishLastAssembly"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deletePluginType"
+        },
+        {
+          "command": "dynamics365Tools.plugins.refreshExplorer"
+        },
+        {
+          "command": "dynamics365Tools.plugins.toggleSolutionFilter"
+        },
+        {
+          "command": "dynamics365Tools.plugins.generatePublicKeyToken"
+        },
+        {
+          "command": "dynamics365Tools.plugins.createStep"
+        },
+        {
+          "command": "dynamics365Tools.plugins.editStep"
+        },
+        {
+          "command": "dynamics365Tools.plugins.enableStep"
+        },
+        {
+          "command": "dynamics365Tools.plugins.disableStep"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deleteStep"
+        },
+        {
+          "command": "dynamics365Tools.plugins.createImage"
+        },
+        {
+          "command": "dynamics365Tools.plugins.editImage"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deleteImage"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "dynamics365Tools.plugins.disableSolutionFilter",
+          "when": "view == dynamics365Tools.pluginExplorer && d365Tools.plugins.filterConfiguredSolutions",
+          "group": "navigation@0",
+          "toggled": "d365Tools.plugins.filterConfiguredSolutions"
+        },
+        {
+          "command": "dynamics365Tools.plugins.enableSolutionFilter",
+          "when": "view == dynamics365Tools.pluginExplorer && !d365Tools.plugins.filterConfiguredSolutions",
+          "group": "navigation@0",
+          "toggled": "d365Tools.plugins.filterConfiguredSolutions"
+        },
+        {
+          "command": "dynamics365Tools.plugins.refreshExplorer",
+          "when": "view == dynamics365Tools.pluginExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "dynamics365Tools.plugins.registerAssembly",
+          "when": "view == dynamics365Tools.pluginExplorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "dynamics365Tools.plugins.updateAssembly",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginAssembly",
+          "group": "inline"
+        },
+        {
+          "command": "dynamics365Tools.plugins.createStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginType",
+          "group": "inline@1"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deletePluginType",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginType",
+          "group": "inline@2"
+        },
+        {
+          "command": "dynamics365Tools.plugins.copyStepDescription",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@0"
+        },
+        {
+          "command": "dynamics365Tools.plugins.editStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@1"
+        },
+        {
+          "command": "dynamics365Tools.plugins.createImage",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@2"
+        },
+        {
+          "command": "dynamics365Tools.plugins.enableStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep:disabled",
+          "group": "inline@3"
+        },
+        {
+          "command": "dynamics365Tools.plugins.disableStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginStep:enabled",
+          "group": "inline@3"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deleteStep",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem =~ /d365PluginStep/",
+          "group": "inline@4"
+        },
+        {
+          "command": "dynamics365Tools.plugins.copyImageDescription",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
+          "group": "inline@0"
+        },
+        {
+          "command": "dynamics365Tools.plugins.editImage",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
+          "group": "inline@1"
+        },
+        {
+          "command": "dynamics365Tools.plugins.deleteImage",
+          "when": "view == dynamics365Tools.pluginExplorer && viewItem == d365PluginImage",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dynamics365tools-utility",
+          "title": "Dynamics 365 Tools",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "dynamics365tools-utility": [
+        {
+          "id": "dynamics365Tools.pluginExplorer",
+          "name": "Plugins",
+          "contextualTitle": "Dynamics 365 Tools"
         }
       ]
     }
@@ -156,7 +436,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && node --require ./tests/shims/register.js --test out/tests/*.test.js",
+    "test": "npm run compile && node ./tests/run-tests.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
