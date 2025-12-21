@@ -61,7 +61,7 @@ export class PluginStepNode extends vscode.TreeItem {
     readonly pluginType: PluginType,
     readonly step: PluginStep,
   ) {
-    const pluginLabel = pluginType.typeName ?? pluginType.name;
+    const pluginLabel = buildStepLabel(pluginType, step);
     super(pluginLabel, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = buildStepDescription(step);
     this.tooltip = buildStepTooltip(pluginType, step);
@@ -211,7 +211,14 @@ export class PluginExplorerProvider implements vscode.TreeDataProvider<PluginExp
 
     try {
       const steps = await service.listSteps(pluginType.id);
-      return steps.map((step) => new PluginStepNode(env, pluginType, step));
+      return steps
+        .slice()
+        .sort((a, b) =>
+          buildStepLabel(pluginType, a).localeCompare(buildStepLabel(pluginType, b), undefined, {
+            sensitivity: "base",
+          }),
+        )
+        .map((step) => new PluginStepNode(env, pluginType, step));
     } catch (error) {
       void vscode.window.showErrorMessage(
         `Failed to load steps for ${pluginType.name}: ${String(error)}`,
@@ -306,11 +313,20 @@ function buildTypeTooltip(pluginType: PluginType): vscode.MarkdownString {
   return new vscode.MarkdownString(parts.join("\n"));
 }
 
+function buildStepLabel(pluginType: PluginType, step: PluginStep): string {
+  const base = step.messageName || pluginType.typeName || pluginType.name;
+  const entityPart = step.primaryEntity ? ` of ${step.primaryEntity}` : "";
+  const stage = step.stage !== undefined ? formatStepStage(step.stage) : undefined;
+  const stagePart = stage ? ` [${stage}]` : "";
+  return `${base}${entityPart}${stagePart}`;
+}
+
 function buildStepDescription(step: PluginStep): string | undefined {
-  const mode = formatStepMode(step.mode);
-  const stage = formatStepStage(step.stage);
-  const message = step.messageName;
-  const segments = [message, stage, mode].filter(Boolean);
+  const segments =
+    step.filteringAttributes
+      ?.split(",")
+      .map((attr) => attr.trim())
+      .filter(Boolean) || [];
   return segments.join(" • ") || undefined;
 }
 
